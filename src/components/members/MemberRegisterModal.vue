@@ -201,14 +201,17 @@
         <div
           class="px-6 sm:px-8 py-5 border-t border-default-soft bg-[var(--color-surface-soft)] flex items-center justify-end gap-3"
         >
-          <BaseButton variant="secondary" @click="$emit('close')">
+          <BaseButton
+            variant="secondary"
+            class="border-2 border-[var(--color-border-strong)]"
+            @click="$emit('close')"
+          >
             Cancelar
           </BaseButton>
           <BaseButton
             type="submit"
             form="register-form"
             variant="primary"
-            size="lg"
             :loading="loading"
             :disabled="loading"
           >

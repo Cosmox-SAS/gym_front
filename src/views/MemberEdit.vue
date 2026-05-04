@@ -186,14 +186,17 @@
 
       <!-- Footer -->
       <div class="px-6 sm:px-8 py-5 border-t border-default-soft bg-[var(--color-surface-soft)] flex items-center justify-end gap-3">
-        <BaseButton variant="secondary" @click="router.push({ name: 'Members' })">
+        <BaseButton
+          variant="secondary"
+          class="border-2 border-[var(--color-border-strong)]"
+          @click="router.push({ name: 'Members' })"
+        >
           Cancelar
         </BaseButton>
         <BaseButton
           type="submit"
           form="edit-form"
           variant="primary"
-          size="lg"
           :loading="loading"
           :disabled="loading"
         >
