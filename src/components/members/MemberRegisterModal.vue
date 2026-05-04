@@ -188,7 +188,7 @@
                   :labels="['Frente', 'Perfil', 'Espalda']"
                 />
                 <p class="mt-3 text-xs text-muted">
-                  Toma o sube las fotos del cliente al ingresar: frente, perfil y espalda.
+                  Solo PNG/JPG/JPEG hasta 3MB.
                 </p>
               </div>
             </section>

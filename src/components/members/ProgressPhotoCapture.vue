@@ -1,11 +1,11 @@
 <template>
   <div>
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-      <div
-        v-for="(label, i) in labels"
-        :key="i"
-        class="photo-slot"
-      >
+        <div
+          v-for="(label, i) in labels"
+          :key="i"
+          class="photo-slot"
+        >
         <div class="photo-frame">
           <img
             v-if="photos[i]?.photo"
@@ -39,14 +39,24 @@
           </button>
         </div>
         <div class="photo-actions">
-          <button type="button" class="photo-btn photo-btn-primary" @click="openCamera(i)">
+          <button
+            type="button"
+            class="photo-btn photo-btn-primary"
+            :disabled="uploadingIndex === i"
+            @click="openCamera(i)"
+          >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
             Cámara
           </button>
-          <button type="button" class="photo-btn photo-btn-secondary" @click="triggerFileInput(i)">
+          <button
+            type="button"
+            class="photo-btn photo-btn-secondary"
+            :disabled="uploadingIndex === i"
+            @click="triggerFileInput(i)"
+          >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
@@ -55,13 +65,25 @@
           <input
             :ref="(el) => (fileInputs[i] = el)"
             type="file"
-            accept="image/*"
+            accept=".png,.jpg,.jpeg,image/png,image/jpeg"
             class="hidden"
             @change="onFileSelected($event, i)"
           />
         </div>
+        <p v-if="uploadingIndex === i" class="photo-feedback photo-feedback-info">
+          Subiendo foto...
+        </p>
+        <p v-if="slotErrors[i]" class="photo-feedback photo-feedback-error">
+          {{ slotErrors[i] }}
+        </p>
+        <p v-else-if="slotSuccess[i]" class="photo-feedback photo-feedback-success">
+          {{ slotSuccess[i] }}
+        </p>
       </div>
     </div>
+    <p v-if="globalSuccessMessage" class="photo-global-success">
+      {{ globalSuccessMessage }}
+    </p>
 
     <!-- Camera modal overlay -->
     <Transition name="cam-fade">
@@ -150,7 +172,10 @@ const photos = computed(() => {
 function setPhoto(index, dataUrl) {
   const next = [...photos.value];
   next[index] = dataUrl
-    ? { photo: dataUrl, taken_at: new Date().toISOString() }
+    ? {
+        photo: typeof dataUrl === "string" ? dataUrl : dataUrl.photo,
+        taken_at: typeof dataUrl === "string" ? new Date().toISOString() : dataUrl.taken_at,
+      }
     : null;
   emit("update:modelValue", next);
 }
@@ -172,21 +197,88 @@ function formatDate(iso) {
 
 // ===== File upload =====
 const fileInputs = ref([]);
+const slotErrors = ref(["", "", ""]);
+const slotSuccess = ref(["", "", ""]);
+const uploadingIndex = ref(null);
+const globalSuccessMessage = ref("");
+
+const ALLOWED_MIME_TYPES = ["image/png", "image/jpeg"];
+const ALLOWED_EXTENSIONS = ["png", "jpg", "jpeg"];
+const MAX_FILE_SIZE = 3 * 1024 * 1024;
 
 function triggerFileInput(index) {
+  clearMessages(index);
   const el = fileInputs.value[index];
   if (el) el.click();
 }
 
-function onFileSelected(event, index) {
+async function onFileSelected(event, index) {
   const file = event.target.files?.[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    if (e.target?.result) setPhoto(index, e.target.result);
-  };
-  reader.readAsDataURL(file);
+  clearMessages(index);
+  const validationError = validateImageFile(file);
+  if (validationError) {
+    slotErrors.value[index] = validationError;
+    event.target.value = "";
+    return;
+  }
+  await readFileAndSetPhoto(index, file);
   event.target.value = "";
+}
+
+function validateImageFile(file) {
+  const extension = (file.name.split(".").pop() || "").toLowerCase();
+  const isMimeValid = ALLOWED_MIME_TYPES.includes((file.type || "").toLowerCase());
+  const isExtensionValid = ALLOWED_EXTENSIONS.includes(extension);
+
+  if (!isMimeValid || !isExtensionValid) {
+    return "Formato no permitido. Usa PNG o JPG/JPEG.";
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    return "La imagen supera el limite de 3MB.";
+  }
+
+  return "";
+}
+
+function clearMessages(index) {
+  slotErrors.value[index] = "";
+  slotSuccess.value[index] = "";
+  globalSuccessMessage.value = "";
+}
+
+async function readFileAndSetPhoto(index, file) {
+  uploadingIndex.value = index;
+
+  try {
+    const dataUrl = await readFileAsDataUrl(file);
+    setPhoto(index, {
+      photo: dataUrl,
+      taken_at: new Date().toISOString(),
+    });
+    slotSuccess.value[index] = "Foto subida con exito.";
+    globalSuccessMessage.value = "Imagen cargada correctamente. Guarda el cliente para persistir.";
+  } catch {
+    slotErrors.value[index] = "No se pudo leer la foto. Intenta nuevamente.";
+  } finally {
+    uploadingIndex.value = null;
+  }
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string" && reader.result) {
+        resolve(reader.result);
+      } else {
+        reject(new Error("empty"));
+      }
+    };
+    reader.onerror = () => reject(new Error("read_error"));
+    reader.readAsDataURL(file);
+  });
 }
 
 // ===== Camera =====
@@ -197,6 +289,7 @@ const videoEl = ref(null);
 let activeStream = null;
 
 async function openCamera(index) {
+  clearMessages(index);
   cameraIndex.value = index;
   cameraOpen.value = true;
   cameraError.value = "";
@@ -250,9 +343,17 @@ function capturePhoto() {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
   ctx.drawImage(v, 0, 0, w, h);
-  const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
-  setPhoto(cameraIndex.value, dataUrl);
-  closeCamera();
+  canvas.toBlob(async (blob) => {
+    if (!blob) {
+      slotErrors.value[cameraIndex.value] = "No se pudo capturar la imagen.";
+      return;
+    }
+
+    const file = new File([blob], `captura-${Date.now()}.jpg`, { type: "image/jpeg" });
+    const index = cameraIndex.value;
+    closeCamera();
+    await readFileAndSetPhoto(index, file);
+  }, "image/jpeg", 0.85);
 }
 
 onBeforeUnmount(stopStream);
@@ -368,6 +469,11 @@ onBeforeUnmount(stopStream);
   transition: all 0.15s;
 }
 
+.photo-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .photo-btn-primary {
   background: rgba(99, 102, 241, 0.1);
   color: #4f46e5;
@@ -403,6 +509,31 @@ onBeforeUnmount(stopStream);
 .photo-btn-capture:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.photo-feedback {
+  font-size: 0.72rem;
+  line-height: 1.25;
+  margin-top: 0.1rem;
+}
+
+.photo-feedback-info {
+  color: var(--color-text-muted);
+}
+
+.photo-feedback-error {
+  color: #b91c1c;
+}
+
+.photo-feedback-success {
+  color: #166534;
+}
+
+.photo-global-success {
+  margin-top: 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #166534;
 }
 
 /* ===== Camera overlay ===== */
