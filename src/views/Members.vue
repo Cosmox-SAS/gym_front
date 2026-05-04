@@ -74,9 +74,9 @@
               </div>
             </div>
             <div class="flex flex-col items-end gap-2 shrink-0">
-              <BaseBadge :color="statusColor(memberStatus(member))">
-                {{ member.memberships?.length ? traducirEstado(memberStatus(member)) : "Sin plan" }}
-              </BaseBadge>
+              <p class="member-state-text" :class="`member-state-${statusColor(memberStatus(member))}`">
+                Estado: {{ member.memberships?.length ? traducirEstado(memberStatus(member)) : "Sin plan" }}
+              </p>
               <button
                 @click="toggleDetalle(member.id)"
                 class="text-xs font-bold px-3 py-1 rounded-full border transition-all h-8 flex items-center select-none"
@@ -130,12 +130,6 @@
               <div class="member-info-row">
                 <span class="member-info-label">Sexo</span>
                 <span class="member-info-value capitalize">{{ member.sexo || "—" }}</span>
-              </div>
-              <div class="member-info-row">
-                <span class="member-info-label">Estado</span>
-                <BaseBadge :color="statusColor(memberStatus(member))">
-                  {{ member.memberships?.length ? traducirEstado(memberStatus(member)) : "Sin plan" }}
-                </BaseBadge>
               </div>
             </div>
 
@@ -258,7 +252,6 @@ import MemberRegisterModal from "@/components/members/MemberRegisterModal.vue";
 import MemberAssignModal from "@/components/members/MemberAssignModal.vue";
 import MemberPaymentModal from "@/components/members/MemberPaymentModal.vue";
 import MemberDetailModal from "@/components/members/MemberDetailModal.vue";
-import { BaseBadge } from "@/components/ui";
 
 // Estado Global
 const members = ref([]);
@@ -510,6 +503,17 @@ const traducirEstado = (estado) => {
   background: rgba(99, 102, 241, 0.12);
 }
 
+.member-state-text {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.member-state-green { color: #15803d; }
+.member-state-red { color: #dc2626; }
+.member-state-yellow { color: #b45309; }
+.member-state-gray { color: var(--color-text-muted); }
+
 .member-card-detail {
   padding: 0.9rem 1rem 1rem;
   background: var(--color-surface-soft);
@@ -681,4 +685,8 @@ const traducirEstado = (estado) => {
   color: #c7d2fe;
   background: rgba(99, 102, 241, 0.2);
 }
+
+:global(.dark) .member-state-green { color: #4ade80; }
+:global(.dark) .member-state-red { color: #fca5a5; }
+:global(.dark) .member-state-yellow { color: #fcd34d; }
 </style>
