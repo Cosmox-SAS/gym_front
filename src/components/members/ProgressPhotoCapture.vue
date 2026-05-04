@@ -138,6 +138,7 @@
 
 <script setup>
 import { ref, computed, nextTick, onBeforeUnmount } from "vue";
+import api from "@/axios";
 
 const props = defineProps({
   modelValue: {
@@ -147,6 +148,14 @@ const props = defineProps({
   labels: {
     type: Array,
     default: () => ["Inicial", "Progreso", "Actual"],
+  },
+  memberId: {
+    type: [Number, String],
+    default: null,
+  },
+  identification: {
+    type: String,
+    default: "",
   },
 });
 
@@ -222,7 +231,7 @@ async function onFileSelected(event, index) {
     event.target.value = "";
     return;
   }
-  await readFileAndSetPhoto(index, file);
+  await uploadPhoto(index, file);
   event.target.value = "";
 }
 
@@ -248,37 +257,50 @@ function clearMessages(index) {
   globalSuccessMessage.value = "";
 }
 
-async function readFileAndSetPhoto(index, file) {
+function resolveUploadContext() {
+  const hasMemberId = props.memberId !== null && props.memberId !== undefined && props.memberId !== "";
+  const hasIdentification = !!(props.identification || "").trim();
+
+  if (hasMemberId) {
+    return { member_id: String(props.memberId) };
+  }
+
+  if (hasIdentification) {
+    return { identification: (props.identification || "").trim() };
+  }
+
+  return null;
+}
+
+async function uploadPhoto(index, file) {
   uploadingIndex.value = index;
 
   try {
-    const dataUrl = await readFileAsDataUrl(file);
+    const context = resolveUploadContext();
+    if (!context) {
+      slotErrors.value[index] = "Ingresa la identificacion o guarda el cliente primero.";
+      return;
+    }
+
+    const form = new FormData();
+    form.append("photo", file);
+    Object.entries(context).forEach(([key, value]) => form.append(key, value));
+
+    const { data } = await api.post("/members/photos/upload", form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
     setPhoto(index, {
-      photo: dataUrl,
-      taken_at: new Date().toISOString(),
+      photo: data.url,
+      taken_at: data.taken_at || new Date().toISOString(),
     });
     slotSuccess.value[index] = "Foto subida con exito.";
     globalSuccessMessage.value = "Imagen cargada correctamente. Guarda el cliente para persistir.";
   } catch {
-    slotErrors.value[index] = "No se pudo leer la foto. Intenta nuevamente.";
+    slotErrors.value[index] = "No se pudo subir la foto. Intenta nuevamente.";
   } finally {
     uploadingIndex.value = null;
   }
-}
-
-function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string" && reader.result) {
-        resolve(reader.result);
-      } else {
-        reject(new Error("empty"));
-      }
-    };
-    reader.onerror = () => reject(new Error("read_error"));
-    reader.readAsDataURL(file);
-  });
 }
 
 // ===== Camera =====
@@ -352,7 +374,7 @@ function capturePhoto() {
     const file = new File([blob], `captura-${Date.now()}.jpg`, { type: "image/jpeg" });
     const index = cameraIndex.value;
     closeCamera();
-    await readFileAndSetPhoto(index, file);
+    await uploadPhoto(index, file);
   }, "image/jpeg", 0.85);
 }
 

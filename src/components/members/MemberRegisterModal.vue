@@ -186,6 +186,7 @@
                 <ProgressPhotoCapture
                   v-model="initialPhotos"
                   :labels="['Frente', 'Perfil', 'Espalda']"
+                  :identification="form.identification"
                 />
                 <p class="mt-3 text-xs text-muted">
                   Solo PNG/JPG/JPEG hasta 3MB.
