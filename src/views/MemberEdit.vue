@@ -83,6 +83,7 @@
               />
             </div>
           </section>
+          </div>
 
           <!-- ===== Biometría ===== -->
           <div class="section-header">
@@ -173,37 +174,6 @@
             </div>
           </section>
 
-          <!-- ===== Fotos de Progreso (toggleable) ===== -->
-          <section class="pt-6 border-t border-default-soft">
-            <div class="section-header">
-              <span class="section-bar bg-indigo-500" />
-              <h2 class="section-title" style="color: var(--color-text-muted);">Fotos de Progreso</h2>
-              <button
-                type="button"
-                class="ml-auto progress-toggle"
-                @click="showProgressSection = !showProgressSection"
-              >
-                <svg
-                  class="w-3.5 h-3.5 transition-transform"
-                  :class="{ 'rotate-180': showProgressSection }"
-                  fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-                {{ showProgressSection ? 'Ocultar' : 'Mostrar' }}
-              </button>
-            </div>
-            <div
-              v-if="showProgressSection"
-              class="rounded-xl border-2 border-dashed border-default-soft bg-[var(--color-surface-soft)] p-4"
-            >
-              <ProgressPhotoGallery v-model="progressPhotos" />
-              <p class="mt-3 text-xs text-muted">
-                Agrega fotos para registrar la evolución del cliente. Cada foto guarda la fecha.
-              </p>
-            </div>
-          </section>
-
           <div
             v-if="errorMessage"
             class="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700"
@@ -240,7 +210,6 @@ import api from "@/axios";
 import Swal from "sweetalert2";
 import FingerprintEnroll from "@/components/FingerprintEnroll.vue";
 import ProgressPhotoCapture from "@/components/members/ProgressPhotoCapture.vue";
-import ProgressPhotoGallery from "@/components/members/ProgressPhotoGallery.vue";
 import { BaseInput, BaseSelect, BaseButton } from "@/components/ui";
 import { SWAL_COLORS } from "@/lib/colors";
 
@@ -272,8 +241,6 @@ const errorMessage = ref("");
 const loading = ref(false);
 const memberHasFingerprint = ref(false);
 const initialPhotos = ref([null, null, null]);
-const progressPhotos = ref([]);
-const showProgressSection = ref(false);
 
 const fetchMember = async () => {
   try {
@@ -292,7 +259,6 @@ const fetchMember = async () => {
     memberHasFingerprint.value = !!data.fingerprint_data;
     const initials = Array.isArray(data.initial_photos) ? data.initial_photos : [];
     initialPhotos.value = [initials[0] || null, initials[1] || null, initials[2] || null];
-    progressPhotos.value = Array.isArray(data.progress_photos) ? data.progress_photos : [];
   } catch {
     Swal.fire({
       icon: "error",
@@ -312,7 +278,6 @@ const updateMember = async () => {
     await api.put(`/members/${memberId}`, {
       ...form,
       initial_photos: initialPhotos.value,
-      progress_photos: progressPhotos.value,
     });
 
     await Swal.fire({
@@ -403,25 +368,4 @@ onMounted(fetchMember);
   color: var(--color-text-subtle);
 }
 
-.progress-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: #6366f1;
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.25);
-  padding: 0.3rem 0.7rem;
-  border-radius: 9999px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.progress-toggle:hover { background: rgba(99, 102, 241, 0.18); }
-:global(.dark) .progress-toggle {
-  color: #a5b4fc;
-  background: rgba(99, 102, 241, 0.18);
-}
 </style>

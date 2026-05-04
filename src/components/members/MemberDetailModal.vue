@@ -255,42 +255,6 @@
                   </p>
                 </div>
 
-                <!-- ===== Fotos de progreso (galería toggleable) ===== -->
-                <div class="detail-card">
-                  <div class="section-header">
-                    <span class="section-bar bg-indigo-500" />
-                    <h2 class="section-title" style="color: var(--color-text-muted);">Fotos de Progreso</h2>
-                    <button
-                      type="button"
-                      class="ml-auto progress-toggle"
-                      @click="showProgressGallery = !showProgressGallery"
-                    >
-                      <svg
-                        class="w-3.5 h-3.5 transition-transform"
-                        :class="{ 'rotate-180': showProgressGallery }"
-                        fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"
-                      >
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                      </svg>
-                      {{ showProgressGallery ? 'Ocultar' : 'Mostrar' }}
-                    </button>
-                  </div>
-
-                  <div v-if="showProgressGallery">
-                    <div v-if="progressGallery.length" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      <div v-for="(p, i) in progressGallery" :key="i" class="progress-photo-slot">
-                        <img :src="p.photo" :alt="`Progreso ${i + 1}`" class="progress-photo-img" />
-                        <span class="progress-photo-tag">#{{ i + 1 }}</span>
-                        <span v-if="p.taken_at" class="progress-photo-date">
-                          {{ formatDate(p.taken_at) }}
-                        </span>
-                      </div>
-                    </div>
-                    <p v-else class="text-sm italic text-subtle text-center py-4">
-                      No hay fotos de progreso registradas.
-                    </p>
-                  </div>
-                </div>
               </div>
 
               <!-- ===== Fotos Iniciales (frente, perfil, espalda) ===== -->
@@ -417,14 +381,6 @@ const initialPhotos = computed(() => {
   if (!Array.isArray(raw)) return [null, null, null];
   return [normalizePhotoEntry(raw[0]), normalizePhotoEntry(raw[1]), normalizePhotoEntry(raw[2])];
 });
-
-const progressGallery = computed(() => {
-  const raw = member.value?.progress_photos;
-  if (!Array.isArray(raw)) return [];
-  return raw.map(normalizePhotoEntry).filter(Boolean);
-});
-
-const showProgressGallery = ref(false);
 
 function formatDate(iso) {
   if (!iso) return "";
@@ -705,28 +661,6 @@ function traducirEstado(estado) {
   padding: 0.2rem 0.4rem;
   border-radius: 9999px;
   backdrop-filter: blur(4px);
-}
-
-.progress-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: #6366f1;
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px solid rgba(99, 102, 241, 0.25);
-  padding: 0.3rem 0.7rem;
-  border-radius: 9999px;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.progress-toggle:hover { background: rgba(99, 102, 241, 0.18); }
-:global(.dark) .progress-toggle {
-  color: #a5b4fc;
-  background: rgba(99, 102, 241, 0.18);
 }
 
 .info-label {
