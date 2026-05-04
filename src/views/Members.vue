@@ -34,9 +34,9 @@
         <div
           v-for="member in miembrosPaginados"
           :key="member.id"
-          class="relative rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg bg-[var(--color-surface)] text-default"
+          class="member-card"
           :class="[
-            'shadow-card',
+            'shadow-card transition-all duration-200 hover:shadow-lg',
             member.is_expired ? 'ring-2 ring-red-400/40' : 'ring-1 ring-[var(--color-border-soft)]',
           ]"
         >
@@ -54,45 +54,94 @@
             Pendiente de Pago
           </div>
 
-          <div class="p-4 flex justify-between items-center">
-            <div>
-              <h2 class="text-base font-bold text-default">{{ member.name }}</h2>
-              <p class="text-sm text-muted mt-0.5">{{ member.phone || "Sin teléfono" }}</p>
-              <p class="text-sm text-muted">{{ member.birth_date }}</p>
+          <div class="member-card-head">
+            <div class="member-hero">
+              <div class="member-avatar-wrap">
+                <img
+                  v-if="getPrimaryPhoto(member)"
+                  :src="getPrimaryPhoto(member)"
+                  :alt="`Foto de ${member.name}`"
+                  class="member-avatar"
+                />
+                <div v-else class="member-avatar member-avatar-fallback">
+                  {{ (member.name || "?").charAt(0).toUpperCase() }}
+                </div>
+              </div>
+              <div class="min-w-0">
+                <h2 class="text-base font-bold text-default truncate">{{ member.name }}</h2>
+                <p class="text-sm text-muted mt-0.5 truncate">{{ member.phone || "Sin teléfono" }}</p>
+                <p class="text-xs text-subtle mt-0.5">{{ member.birth_date || "Sin fecha de nacimiento" }}</p>
+              </div>
             </div>
-            <button
-              @click="toggleDetalle(member.id)"
-              class="text-xs font-bold px-3 py-1 rounded-full border transition-all h-8 flex items-center select-none"
-              :class="
-                detallesAbiertos.includes(member.id)
-                  ? 'detail-toggle-active'
-                  : 'bg-[var(--color-overlay)] text-muted border-default-soft'
-              "
-            >
-              {{ detallesAbiertos.includes(member.id) ? "Ocultar" : "Ver más" }}
-            </button>
+            <div class="flex flex-col items-end gap-2 shrink-0">
+              <BaseBadge :color="statusColor(memberStatus(member))">
+                {{ member.memberships?.length ? traducirEstado(memberStatus(member)) : "Sin plan" }}
+              </BaseBadge>
+              <button
+                @click="toggleDetalle(member.id)"
+                class="text-xs font-bold px-3 py-1 rounded-full border transition-all h-8 flex items-center select-none"
+                :class="
+                  detallesAbiertos.includes(member.id)
+                    ? 'detail-toggle-active'
+                    : 'bg-[var(--color-overlay)] text-muted border-default-soft'
+                "
+              >
+                {{ detallesAbiertos.includes(member.id) ? "Ocultar" : "Ver más" }}
+              </button>
+            </div>
           </div>
 
           <div
             v-if="detallesAbiertos.includes(member.id)"
-            class="px-4 pb-4 text-sm space-y-2 border-t border-default-soft pt-3 bg-[var(--color-surface-soft)]"
+            class="member-card-detail"
           >
-            <div class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-              <p><span class="text-subtle">Cédula</span><br/><span class="font-medium">{{ member.identification || "—" }}</span></p>
-              <p><span class="text-subtle">Email</span><br/><span class="font-medium">{{ member.email || "—" }}</span></p>
-              <p><span class="text-subtle">Peso</span><br/><span class="font-medium">{{ member.peso ?? "—" }} kg</span></p>
-              <p><span class="text-subtle">Altura</span><br/><span class="font-medium">{{ member.estatura ? (member.estatura > 3 ? (member.estatura/100).toFixed(2) : member.estatura) : "—" }} m</span></p>
-              <p><span class="text-subtle">Sexo</span><br/><span class="font-medium">{{ member.sexo || "—" }}</span></p>
-              <p><span class="text-subtle">Estado</span><br/>
-                <span class="badge" :class="{
-                  'badge-green':  member.memberships?.[0]?.status === 'active',
-                  'badge-red':    member.memberships?.[0]?.status === 'expired',
-                  'badge-yellow': member.memberships?.[0]?.status === 'pending',
-                  'badge-gray':   !member.memberships?.length,
-                }">{{ member.memberships?.length ? traducirEstado(member.memberships[0].status) : "Sin plan" }}</span>
-              </p>
+            <div class="member-detail-photo-shell">
+              <img
+                v-if="getPrimaryPhoto(member)"
+                :src="getPrimaryPhoto(member)"
+                :alt="`Foto inicial de ${member.name}`"
+                class="member-detail-photo"
+              />
+              <div v-else class="member-detail-photo-empty">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>Sin foto inicial</span>
+              </div>
             </div>
-            <p class="text-xs text-subtle italic mt-1">{{ member.medical_history || "Sin antecedentes médicos" }}</p>
+
+            <div class="member-info-list">
+              <div class="member-info-row">
+                <span class="member-info-label">Cédula / ID</span>
+                <span class="member-info-value">{{ member.identification || "—" }}</span>
+              </div>
+              <div class="member-info-row">
+                <span class="member-info-label">Email</span>
+                <span class="member-info-value">{{ member.email || "—" }}</span>
+              </div>
+              <div class="member-info-row">
+                <span class="member-info-label">Peso</span>
+                <span class="member-info-value">{{ member.peso ?? "—" }} kg</span>
+              </div>
+              <div class="member-info-row">
+                <span class="member-info-label">Altura</span>
+                <span class="member-info-value">{{ formatEstatura(member.estatura) }}</span>
+              </div>
+              <div class="member-info-row">
+                <span class="member-info-label">Sexo</span>
+                <span class="member-info-value capitalize">{{ member.sexo || "—" }}</span>
+              </div>
+              <div class="member-info-row">
+                <span class="member-info-label">Estado</span>
+                <BaseBadge :color="statusColor(memberStatus(member))">
+                  {{ member.memberships?.length ? traducirEstado(memberStatus(member)) : "Sin plan" }}
+                </BaseBadge>
+              </div>
+            </div>
+
+            <div class="member-notes">
+              {{ member.medical_history || "Sin antecedentes médicos" }}
+            </div>
 
             <div class="pt-3 flex flex-wrap items-center gap-1.5">
               <button
@@ -209,6 +258,7 @@ import MemberRegisterModal from "@/components/members/MemberRegisterModal.vue";
 import MemberAssignModal from "@/components/members/MemberAssignModal.vue";
 import MemberPaymentModal from "@/components/members/MemberPaymentModal.vue";
 import MemberDetailModal from "@/components/members/MemberDetailModal.vue";
+import { BaseBadge } from "@/components/ui";
 
 // Estado Global
 const members = ref([]);
@@ -354,6 +404,43 @@ function formatearTelefono(numero) {
   return limpio;
 }
 
+function normalizePhotoEntry(value) {
+  if (!value) return null;
+  if (typeof value === "string") return { photo: value, taken_at: null };
+  if (typeof value === "object" && value.photo) {
+    return { photo: value.photo, taken_at: value.taken_at || null };
+  }
+  return null;
+}
+
+function getPrimaryPhoto(member) {
+  const photos = Array.isArray(member?.initial_photos) ? member.initial_photos : [];
+  const first = photos.map(normalizePhotoEntry).find((entry) => !!entry?.photo);
+  return first?.photo || "";
+}
+
+function formatEstatura(estatura) {
+  if (!estatura) return "—";
+  const metros = estatura > 3 ? (estatura / 100).toFixed(2) : estatura;
+  return `${metros} m`;
+}
+
+function memberStatus(member) {
+  return member?.memberships?.[0]?.status || "inactive";
+}
+
+function statusColor(status) {
+  const map = {
+    active: "green",
+    expired: "red",
+    pending: "yellow",
+    inactive_unpaid: "yellow",
+    cancelled: "gray",
+    inactive: "gray",
+  };
+  return map[status] || "gray";
+}
+
 // ... código existente ...
 
 const traducirEstado = (estado) => {
@@ -361,6 +448,8 @@ const traducirEstado = (estado) => {
     active: "Activa",
     expired: "Vencida",
     pending: "Pendiente",
+    inactive_unpaid: "Sin pago",
+    inactive: "Inactiva",
     cancelled: "Cancelada",
   };
   // Si no encuentra la traducción, devuelve el estado original
@@ -369,6 +458,134 @@ const traducirEstado = (estado) => {
 </script>
 
 <style scoped>
+.member-card {
+  position: relative;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.member-card-head {
+  padding: 0.95rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.07) 0%, rgba(99, 102, 241, 0) 100%);
+}
+
+.member-hero {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.member-avatar-wrap {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.8rem;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-soft);
+}
+
+.member-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.member-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1rem;
+  color: #4f46e5;
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.member-card-detail {
+  padding: 0.9rem 1rem 1rem;
+  background: var(--color-surface-soft);
+}
+
+.member-detail-photo-shell {
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: var(--color-surface);
+  margin-bottom: 0.75rem;
+}
+
+.member-detail-photo {
+  width: 100%;
+  height: 9rem;
+  object-fit: cover;
+  display: block;
+}
+
+.member-detail-photo-empty {
+  height: 9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--color-text-subtle);
+}
+
+.member-info-list {
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+}
+
+.member-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.7rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.member-info-row:last-child {
+  border-bottom: none;
+}
+
+.member-info-label {
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--color-text-subtle);
+}
+
+.member-info-value {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: right;
+  word-break: break-word;
+}
+
+.member-notes {
+  margin-top: 0.65rem;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: 0.65rem;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  line-height: 1.45;
+  font-style: italic;
+}
+
 .action-btn {
   display: inline-flex;
   align-items: center;
@@ -455,5 +672,13 @@ const traducirEstado = (estado) => {
   background: rgba(96, 165, 250, 0.15);
   color: #93c5fd;
   border-color: rgba(96, 165, 250, 0.30);
+}
+
+:global(.dark) .member-card-head {
+  background: linear-gradient(180deg, rgba(99, 102, 241, 0.12) 0%, rgba(99, 102, 241, 0) 100%);
+}
+:global(.dark) .member-avatar-fallback {
+  color: #c7d2fe;
+  background: rgba(99, 102, 241, 0.2);
 }
 </style>
