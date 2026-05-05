@@ -41,12 +41,12 @@
         <div class="flex-1 overflow-y-auto px-6 sm:px-8 py-7">
           <form id="register-form" class="space-y-8" @submit.prevent="registrar">
             <!-- ===== Información personal ===== -->
-            <section>
-              <div class="section-header">
+            <div>
+              <div class="section-header" style="margin-bottom: 0.5rem;">
                 <span class="section-bar bg-primary-600" />
                 <h2 class="section-title" style="color: var(--color-text-muted);">Información Personal</h2>
               </div>
-
+              <section class="p-5 sm:p-6 bg-[var(--color-surface-soft)] rounded-xl border border-default-soft">
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 <BaseInput
                   v-model="form.name"
@@ -85,56 +85,58 @@
                   :options="sexoOptions"
                 />
               </div>
-            </section>
+              </section>
+            </div>
 
             <!-- ===== Biometría ===== -->
-            <section class="p-5 sm:p-6 bg-[var(--color-surface-soft)] rounded-xl border border-default-soft">
-              <div class="section-header">
+            <div>
+              <div class="section-header" style="margin-bottom: 0.5rem;">
                 <span class="section-bar bg-success-600" />
                 <h2 class="section-title" style="color: var(--color-text-muted);">Biometría</h2>
               </div>
+              <section class="p-5 sm:p-6 bg-[var(--color-surface-soft)] rounded-xl border border-default-soft">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <BaseInput
+                    v-model.number="form.estatura"
+                    label="Estatura"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="1.70"
+                  >
+                    <template #suffix>
+                      <span class="text-xs font-semibold text-success-700">m</span>
+                    </template>
+                  </BaseInput>
 
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <BaseInput
-                  v-model.number="form.estatura"
-                  label="Estatura"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="1.70"
-                >
-                  <template #suffix>
-                    <span class="text-xs font-semibold text-success-700">m</span>
-                  </template>
-                </BaseInput>
+                  <BaseInput
+                    v-model.number="form.peso"
+                    label="Peso"
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    placeholder="70.5"
+                  >
+                    <template #suffix>
+                      <span class="text-xs font-semibold text-success-700">kg</span>
+                    </template>
+                  </BaseInput>
+                </div>
+              </section>
+            </div>
 
-                <BaseInput
-                  v-model.number="form.peso"
-                  label="Peso"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  placeholder="70.5"
-                >
-                  <template #suffix>
-                    <span class="text-xs font-semibold text-success-700">kg</span>
-                  </template>
-                </BaseInput>
-              </div>
-            </section>
-
-            <!-- ===== Antecedentes médicos ===== -->
+            <!-- ===== Objetivos / Observaciones ===== -->
             <section>
               <div class="section-header">
-                <span class="section-bar bg-danger-500" />
-                <h2 class="section-title" style="color: var(--color-text-muted);">Antecedentes Médicos</h2>
+                <span class="section-bar bg-amber-500" />
+                <h2 class="section-title" style="color: var(--color-text-muted);">Objetivos / Observaciones</h2>
                 <span class="ml-auto optional-tag">Opcional</span>
               </div>
               <textarea
                 v-model="form.medical_history"
                 rows="3"
                 class="field-input resize-none"
-                placeholder="Detalle alergias, lesiones previas o condiciones crónicas relevantes..."
+                placeholder="Ej. perder peso, ganar masa muscular, condiciones a tener en cuenta..."
               />
             </section>
 
@@ -172,6 +174,26 @@
                 </p>
               </div>
             </section>
+
+            <!-- ===== Fotos Iniciales (frente, perfil, espalda) ===== -->
+            <section class="pt-6 border-t border-default-soft">
+              <div class="section-header">
+                <span class="section-bar bg-success-600" />
+                <h2 class="section-title" style="color: var(--color-text-muted);">Fotos Iniciales</h2>
+                <span class="ml-auto optional-tag">Opcional</span>
+              </div>
+              <div class="rounded-xl border-2 border-dashed border-default-soft bg-[var(--color-surface-soft)] p-4">
+                <ProgressPhotoCapture
+                  v-model="initialPhotos"
+                  :labels="['Frente', 'Perfil', 'Espalda']"
+                  :identification="form.identification"
+                />
+                <p class="mt-3 text-xs text-muted">
+                  Solo PNG/JPG/JPEG hasta 3MB.
+                </p>
+              </div>
+            </section>
+
           </form>
         </div>
 
@@ -179,14 +201,17 @@
         <div
           class="px-6 sm:px-8 py-5 border-t border-default-soft bg-[var(--color-surface-soft)] flex items-center justify-end gap-3"
         >
-          <BaseButton variant="secondary" @click="$emit('close')">
+          <BaseButton
+            variant="secondary"
+            class="border-2 border-[var(--color-border-strong)]"
+            @click="$emit('close')"
+          >
             Cancelar
           </BaseButton>
           <BaseButton
             type="submit"
             form="register-form"
             variant="primary"
-            size="lg"
             :loading="loading"
             :disabled="loading"
           >
@@ -203,6 +228,7 @@ import { ref, reactive, computed } from "vue";
 import api from "@/axios";
 import Swal from "sweetalert2";
 import FingerprintEnroll from "@/components/FingerprintEnroll.vue";
+import ProgressPhotoCapture from "@/components/members/ProgressPhotoCapture.vue";
 import { BaseInput, BaseSelect, BaseButton } from "@/components/ui";
 import { SWAL_COLORS } from "@/lib/colors";
 
@@ -215,6 +241,7 @@ const emit = defineEmits(["close", "saved"]);
 
 const loading = ref(false);
 const capturedTemplate = ref("");
+const initialPhotos = ref([null, null, null]);
 
 const sexoOptions = [
   { value: "masculino", label: "Masculino" },
@@ -255,12 +282,17 @@ function resetForm() {
     plan_id: "",
   });
   capturedTemplate.value = "";
+  initialPhotos.value = [null, null, null];
 }
 
 const registrar = async () => {
   loading.value = true;
   try {
-    const { data: nuevoCliente } = await api.post("/members", form);
+    const payload = {
+      ...form,
+      initial_photos: initialPhotos.value,
+    };
+    const { data: nuevoCliente } = await api.post("/members", payload);
 
     if (capturedTemplate.value) {
       await api.post(`/members/${nuevoCliente.id}/fingerprint`, {
@@ -366,4 +398,5 @@ const registrar = async () => {
   letter-spacing: 0.15em;
   color: var(--color-text-subtle);
 }
+
 </style>
