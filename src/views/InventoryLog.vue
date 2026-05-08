@@ -6,7 +6,10 @@
           <h1 class="page-title">Movimientos de Inventario</h1>
           <p class="page-subtitle">Historial de ventas y compras</p>
         </div>
-        <router-link to="/Products" class="btn btn-dark">Inventario</router-link>
+        <router-link to="/Products" class="btn btn-dark inline-flex items-center justify-center gap-2">
+          <Boxes class="w-4 h-4" aria-hidden="true" />
+          <span>Inventario</span>
+        </router-link>
       </header>
 
       <div
@@ -17,7 +20,7 @@
           type="button"
           role="tab"
           :aria-selected="tab === 'ventas'"
-          class="px-6 py-2 rounded-lg font-semibold transition text-sm sm:text-base"
+          class="px-6 py-2 rounded-lg font-semibold transition text-sm sm:text-base inline-flex items-center gap-2"
           :class="
             tab === 'ventas'
               ? 'bg-blue-600 text-white shadow'
@@ -25,13 +28,14 @@
           "
           @click="tab = 'ventas'"
         >
+          <ShoppingCart class="w-4 h-4" aria-hidden="true" />
           Reporte de Ventas
         </button>
         <button
           type="button"
           role="tab"
           :aria-selected="tab === 'compras'"
-          class="px-6 py-2 rounded-lg font-semibold transition text-sm sm:text-base"
+          class="px-6 py-2 rounded-lg font-semibold transition text-sm sm:text-base inline-flex items-center gap-2"
           :class="
             tab === 'compras'
               ? 'bg-emerald-600 text-white shadow'
@@ -39,6 +43,7 @@
           "
           @click="tab = 'compras'"
         >
+          <Truck class="w-4 h-4" aria-hidden="true" />
           Compras a Proveedores
         </button>
       </div>
@@ -48,11 +53,15 @@
         class="bg-[var(--color-surface)] rounded-2xl shadow-card p-4 sm:p-6 text-default animate-fade-in space-y-4"
       >
         <div class="flex justify-between items-center gap-3 flex-wrap">
-          <h2 class="text-xl font-semibold" style="color: var(--color-text);">Historial de Ventas</h2>
+          <h2 class="text-xl font-semibold flex items-center gap-2" style="color: var(--color-text);">
+            <Receipt class="w-5 h-5" aria-hidden="true" />
+            Historial de Ventas
+          </h2>
           <div
-            class="text-sm px-3 py-1 rounded-lg border"
+            class="text-sm px-3 py-1 rounded-lg border inline-flex items-center gap-1"
             style="color: var(--color-text-muted); background: var(--color-surface-soft); border-color: var(--color-border);"
           >
+            <DollarSign class="w-3 h-3" aria-hidden="true" />
             Total Vendido:
             <span class="font-semibold text-emerald-500">
               {{ formatCurrency(totalVentas) }}
@@ -110,6 +119,7 @@
               :disabled="currentPageVentas === 1"
               @click="currentPageVentas--"
             >
+              <ChevronLeft class="w-4 h-4" aria-hidden="true" />
               Anterior
             </BaseButton>
             <BaseButton
@@ -119,6 +129,7 @@
               @click="currentPageVentas++"
             >
               Siguiente
+              <ChevronRight class="w-4 h-4" aria-hidden="true" />
             </BaseButton>
           </div>
         </div>
@@ -129,8 +140,12 @@
         class="bg-[var(--color-surface)] rounded-2xl shadow-card p-4 sm:p-6 text-default animate-fade-in space-y-4"
       >
         <div class="flex justify-between items-center gap-3 flex-wrap">
-          <h2 class="text-xl font-semibold" style="color: var(--color-text);">Historial de Compras</h2>
+          <h2 class="text-xl font-semibold flex items-center gap-2" style="color: var(--color-text);">
+            <Truck class="w-5 h-5" aria-hidden="true" />
+            Historial de Compras
+          </h2>
           <BaseButton variant="success" size="sm" @click="abrirModalCompra">
+            <Plus class="w-4 h-4" aria-hidden="true" />
             Registrar Nueva Compra
           </BaseButton>
         </div>
@@ -179,6 +194,7 @@
               :disabled="currentPageCompras === 1"
               @click="currentPageCompras--"
             >
+              <ChevronLeft class="w-4 h-4" aria-hidden="true" />
               Anterior
             </BaseButton>
             <BaseButton
@@ -188,6 +204,7 @@
               @click="currentPageCompras++"
             >
               Siguiente
+              <ChevronRight class="w-4 h-4" aria-hidden="true" />
             </BaseButton>
           </div>
         </div>
@@ -241,9 +258,11 @@
 
       <template #footer>
         <BaseButton variant="secondary" @click="showModal = false">
+          <X class="w-4 h-4" aria-hidden="true" />
           Cancelar
         </BaseButton>
         <BaseButton variant="success" type="submit" form="purchase-form">
+          <Check class="w-4 h-4" aria-hidden="true" />
           Registrar Entrada
         </BaseButton>
       </template>
@@ -257,6 +276,18 @@ import api from "@/axios";
 import dayjs from "dayjs";
 import Swal from "sweetalert2";
 import { BaseButton, BaseInput, BaseSelect, BaseModal } from "@/components/ui";
+import {
+  Boxes,
+  ShoppingCart,
+  Truck,
+  Receipt,
+  DollarSign,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Check,
+} from "lucide-vue-next";
 
 const tab = ref("ventas");
 const ventas = ref([]);

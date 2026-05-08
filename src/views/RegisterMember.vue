@@ -6,6 +6,12 @@
       <!-- Header -->
       <div class="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-default-soft">
         <div class="flex items-center gap-4">
+          <div
+            class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+            style="background: rgba(99,102,241,0.12); color: #818cf8;"
+          >
+            <UserPlus class="w-5 h-5" aria-hidden="true" />
+          </div>
           <div>
             <h1 class="text-xl font-bold text-default tracking-tight leading-tight">
               Registrar Nuevo Cliente
@@ -20,9 +26,7 @@
           class="p-2 hover:bg-[var(--color-overlay)] rounded-full transition-colors"
           aria-label="Cerrar"
         >
-          <svg class="w-5 h-5 text-subtle" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <X class="w-5 h-5 text-muted" aria-hidden="true" />
         </router-link>
       </div>
 
@@ -264,8 +268,9 @@
       >
         <router-link
           :to="{ name: 'Members' }"
-          class="px-5 py-2.5 text-sm font-bold text-subtle hover:text-default transition-colors"
+          class="px-5 py-2.5 text-sm font-bold text-subtle hover:text-default transition-colors inline-flex items-center gap-2"
         >
+          <X class="w-4 h-4" aria-hidden="true" />
           Cancelar
         </router-link>
         <button
@@ -274,10 +279,8 @@
           class="register-submit-btn"
           @click="registerMember"
         >
-          <svg v-if="saving" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-          </svg>
+          <Loader2 v-if="saving" class="w-4 h-4 animate-spin" aria-hidden="true" />
+          <Save v-else class="w-4 h-4" aria-hidden="true" />
           <span>{{ saving ? "Guardando..." : "Guardar Cliente" }}</span>
         </button>
       </div>
@@ -289,6 +292,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/axios";
+import { X, UserPlus, Save, Loader2 } from 'lucide-vue-next'
 import Swal from "sweetalert2";
 import dayjs from "dayjs";
 import FingerprintEnroll from "@/components/FingerprintEnroll.vue";

@@ -7,19 +7,25 @@
           <p class="page-subtitle">Gestión de productos y stock</p>
         </div>
         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-          <router-link to="/Menu" class="btn btn-dark flex-1 sm:flex-none">
-            Inicio
+          <router-link to="/Menu" class="btn btn-dark flex-1 sm:flex-none inline-flex items-center justify-center gap-2">
+            <Home class="w-4 h-4" aria-hidden="true" />
+            <span>Inicio</span>
           </router-link>
           <BaseButton variant="success" class="flex-1 sm:flex-none" @click="abrirModalRegistro">
+            <Plus class="w-4 h-4" aria-hidden="true" />
             Agregar producto
           </BaseButton>
-          <router-link to="/inventory-log" class="btn btn-secondary flex-1 sm:flex-none">
-            Movimientos
+          <router-link to="/inventory-log" class="btn btn-secondary flex-1 sm:flex-none inline-flex items-center justify-center gap-2">
+            <ClipboardList class="w-4 h-4" aria-hidden="true" />
+            <span>Movimientos</span>
           </router-link>
         </div>
       </header>
 
-      <BaseInput v-model="busqueda" placeholder="Buscar producto..." />
+      <div class="relative">
+        <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none z-10" aria-hidden="true" />
+        <BaseInput v-model="busqueda" placeholder="Buscar producto..." class="pl-10" />
+      </div>
 
       <div v-if="loading" class="text-subtle text-center py-10">Cargando...</div>
 
@@ -63,6 +69,7 @@
                 class="flex-1 justify-center"
                 @click="editarProducto(producto)"
               >
+                <Pencil class="w-3.5 h-3.5" aria-hidden="true" />
                 Editar
               </BaseButton>
               <BaseButton
@@ -71,6 +78,7 @@
                 class="flex-1 justify-center"
                 @click="eliminarProducto(producto.id)"
               >
+                <Trash2 class="w-3.5 h-3.5" aria-hidden="true" />
                 Eliminar
               </BaseButton>
             </div>
@@ -89,6 +97,7 @@
               :disabled="currentPageProductos === 1"
               @click="currentPageProductos--"
             >
+              <ChevronLeft class="w-4 h-4" aria-hidden="true" />
               Anterior
             </BaseButton>
             <BaseButton
@@ -98,6 +107,7 @@
               @click="currentPageProductos++"
             >
               Siguiente
+              <ChevronRight class="w-4 h-4" aria-hidden="true" />
             </BaseButton>
           </div>
         </div>
@@ -149,9 +159,11 @@
 
       <template #footer>
         <BaseButton variant="secondary" @click="cerrarModalRegistro">
+          <X class="w-4 h-4" aria-hidden="true" />
           Cancelar
         </BaseButton>
         <BaseButton variant="primary" type="submit" form="product-form">
+          <Check class="w-4 h-4" aria-hidden="true" />
           Guardar
         </BaseButton>
       </template>
@@ -165,6 +177,18 @@ import api from "@/axios";
 import Swal from "sweetalert2";
 import { BaseButton, BaseInput, BaseBadge, BaseModal } from "@/components/ui";
 import { SWAL_COLORS } from "@/lib/colors";
+import {
+  Home,
+  Plus,
+  Search,
+  Pencil,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
+  X,
+  Check,
+} from "lucide-vue-next";
 const productos = ref([]);
 const currentPageProductos = ref(1);
 const PER_PAGE = 10;

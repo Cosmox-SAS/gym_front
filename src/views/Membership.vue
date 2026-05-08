@@ -9,8 +9,14 @@
           <p class="page-subtitle">{{ tituloFiltro }}</p>
         </div>
         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-          <router-link to="/Menu" class="btn btn-secondary flex-1 sm:flex-none">Inicio</router-link>
-          <button @click="showModal = true" class="btn btn-success flex-1 sm:flex-none">Asignar membresía</button>
+          <router-link to="/Menu" class="btn btn-secondary flex-1 sm:flex-none inline-flex items-center justify-center gap-2">
+            <Home class="w-4 h-4" aria-hidden="true" />
+            <span>Inicio</span>
+          </router-link>
+          <button @click="showModal = true" class="btn btn-success flex-1 sm:flex-none inline-flex items-center justify-center gap-2">
+            <Plus class="w-4 h-4" aria-hidden="true" />
+            <span>Asignar membresía</span>
+          </button>
         </div>
       </div>
 
@@ -27,30 +33,31 @@
           class="btn btn-sm whitespace-nowrap"
           :class="statusFilter === 'active' ? 'btn-primary' : 'btn-secondary'"
         >
-          ✅ Activas
+          Activas
         </button>
         <button
           @click="filtrarMembresias('inactive_unpaid')"
           class="btn btn-sm whitespace-nowrap"
           :class="statusFilter === 'inactive_unpaid' ? 'btn-primary' : 'btn-secondary'"
         >
-          ⏳ Por Pagar
+          Por Pagar
         </button>
         <button
           @click="filtrarMembresias('expiring_soon')"
           class="btn btn-sm whitespace-nowrap"
           :class="statusFilter === 'expiring_soon' ? 'btn-primary' : 'btn-secondary'"
         >
-          ⚠️ Vencen Pronto
+          Vencen Pronto
         </button>
       </div>
 
-      <div class="mb-4">
+      <div class="mb-4 relative">
+        <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" aria-hidden="true" />
         <input
           v-model="busquedaMembresia"
           type="text"
           placeholder="Buscar miembro..."
-          class="field-input"
+          class="field-input pl-10"
         />
       </div>
 
@@ -85,7 +92,7 @@
               </td>
 
               <td class="py-3 px-4 text-xs text-muted">
-                {{ formatDate(m.start_date) }} ➝ {{ formatDate(m.end_date) }}
+                {{ formatDate(m.start_date) }} → {{ formatDate(m.end_date) }}
               </td>
 
               <td class="py-3 px-4 text-center">
@@ -113,7 +120,8 @@
                     class="btn btn-sm bg-orange-500 hover:bg-orange-600 text-white shadow-sm flex items-center gap-1"
                     title="Renovar Membresía"
                   >
-                    <span>🔄</span> Renovar
+                    <RefreshCw class="w-3.5 h-3.5" aria-hidden="true" />
+                    Renovar
                   </button>
 
                   <!-- Mostrar Editar solo si NO está vencida (activa, pendiente, etc.) -->
@@ -123,7 +131,8 @@
                     @click="abrirEditarModal(m)"
                     title="Editar / Corregir"
                   >
-                    <span>✏️</span> Editar
+                    <Pencil class="w-3.5 h-3.5" aria-hidden="true" />
+                    Editar
                   </button>
                 </div>
               </td>
@@ -139,9 +148,10 @@
           <button
             @click="cambiarPagina(currentPage - 1)"
             :disabled="currentPage === 1"
-            class="px-3 py-1 rounded border border-default-soft bg-[var(--color-surface)] hover:bg-[var(--color-surface-soft)] disabled:opacity-40 disabled:cursor-not-allowed"
+            class="px-3 py-1 rounded border border-default-soft bg-[var(--color-surface)] hover:bg-[var(--color-surface-soft)] disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-1"
           >
-            ← Anterior
+            <ChevronLeft class="w-4 h-4" aria-hidden="true" />
+            <span>Anterior</span>
           </button>
           <button
             v-for="page in paginasVisibles"
@@ -155,9 +165,10 @@
           <button
             @click="cambiarPagina(currentPage + 1)"
             :disabled="currentPage === lastPage"
-            class="px-3 py-1 rounded border border-default-soft bg-[var(--color-surface)] hover:bg-[var(--color-surface-soft)] disabled:opacity-40 disabled:cursor-not-allowed"
+            class="px-3 py-1 rounded border border-default-soft bg-[var(--color-surface)] hover:bg-[var(--color-surface-soft)] disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-1"
           >
-            Siguiente →
+            <span>Siguiente</span>
+            <ChevronRight class="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -169,16 +180,17 @@
       >
         <div class="w-full max-w-sm p-6 rounded-xl shadow-2xl" :style="{ background: 'var(--modal-panel-bg)', border: '1px solid var(--modal-panel-border)' }">
           <h2 id="membership-edit-modal-title" class="font-bold text-lg mb-4 border-b border-default-soft pb-2 flex items-center gap-2 text-default">
+            <Pencil class="w-5 h-5" aria-hidden="true" />
             Editar Membresía
           </h2>
           <form @submit.prevent="guardarCambios" class="space-y-3">
             <div>
               <label class="text-xs font-bold uppercase text-subtle">Plan</label>
-              <select v-model="editarMembresia.plan.id" class="field-input">
-                <option v-for="plan in planes" :key="plan.id" :value="plan.id">
-                  {{ plan.membership_type?.name }} ({{ traducirFrecuencia(plan.frequency) }})
-                </option>
-              </select>
+              <BaseSelect
+                v-model="editarMembresia.plan.id"
+                :options="planEditOptions"
+                placeholder="Seleccione un plan"
+              />
             </div>
 
             <div class="grid grid-cols-2 gap-3">
@@ -202,19 +214,21 @@
 
             <div>
               <label class="text-xs font-bold uppercase text-subtle">Estado</label>
-              <select v-model="editarMembresia.status" class="field-input">
-                <option value="active">Activa</option>
-                <option value="expired">Vencida</option>
-                <option value="inactive_unpaid">Por Pagar</option>
-                <option value="cancelled">Cancelada</option>
-              </select>
+              <BaseSelect
+                v-model="editarMembresia.status"
+                :options="estadoMembresiaOptions"
+              />
             </div>
 
             <div class="flex justify-end gap-2 mt-4 pt-2 border-t">
-              <button type="button" @click="cerrarEditarModal" class="btn btn-secondary">
-                Cancelar
+              <button type="button" @click="cerrarEditarModal" class="btn btn-secondary inline-flex items-center gap-2">
+                <X class="w-4 h-4" aria-hidden="true" />
+                <span>Cancelar</span>
               </button>
-              <button type="submit" class="btn btn-primary">Guardar</button>
+              <button type="submit" class="btn btn-primary inline-flex items-center gap-2">
+                <Check class="w-4 h-4" aria-hidden="true" />
+                <span>Guardar</span>
+              </button>
             </div>
           </form>
         </div>
@@ -227,6 +241,7 @@
       >
         <div class="w-full max-w-md p-6 rounded-xl shadow-2xl" :style="{ background: 'var(--modal-panel-bg)', border: '1px solid var(--modal-panel-border)' }">
           <h2 id="membership-assign-modal-title" class="font-bold text-lg mb-4 border-b border-default-soft pb-2 flex items-center gap-2 text-default">
+            <CalendarCheck2 class="w-5 h-5" aria-hidden="true" />
             {{ form.member_id ? "Asignar membresía a " + busqueda : "Asignar Nueva" }}
           </h2>
           <form @submit.prevent="asignarMembresia" class="space-y-4">
@@ -256,19 +271,23 @@
 
             <div>
               <label class="text-xs font-bold uppercase text-subtle">Plan</label>
-              <select v-model="form.plan_id" class="field-input" required>
-                <option disabled value="">Seleccione...</option>
-                <option v-for="p in planes" :key="p.id" :value="p.id">
-                  {{ p.membership_type?.name }} - {{ traducirFrecuencia(p.frequency) }} - ${
-                    parseInt(p.price).toLocaleString()
-                  }}
-                </option>
-              </select>
+              <BaseSelect
+                v-model="form.plan_id"
+                :options="planAsignarOptions"
+                placeholder="Seleccione..."
+                required
+              />
             </div>
 
             <div class="flex justify-end gap-2 pt-2">
-              <button type="button" @click="cerrarModal" class="btn btn-secondary">Cancelar</button>
-              <button type="submit" class="btn btn-success">Asignar</button>
+              <button type="button" @click="cerrarModal" class="btn btn-secondary inline-flex items-center gap-2">
+                <X class="w-4 h-4" aria-hidden="true" />
+                <span>Cancelar</span>
+              </button>
+              <button type="submit" class="btn btn-success inline-flex items-center gap-2">
+                <Check class="w-4 h-4" aria-hidden="true" />
+                <span>Asignar</span>
+              </button>
             </div>
           </form>
         </div>
@@ -279,6 +298,7 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
+
 import { useRoute } from "vue-router";
 import api from "@/axios";
 import dayjs from "dayjs";
@@ -286,6 +306,19 @@ import utc from "dayjs/plugin/utc";
 
 dayjs.extend(utc);
 import Swal from "sweetalert2";
+import {
+  Home,
+  Plus,
+  Search,
+  Pencil,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  CalendarCheck2,
+  X,
+  Check,
+} from "lucide-vue-next";
+import { BaseSelect } from "@/components/ui";
 
 const route = useRoute();
 
@@ -509,6 +542,27 @@ const traducirFrecuencia = (f) => {
   const map = { daily: "Diaria", weekly: "Semanal", biweekly: "Quincenal", monthly: "Mensual" };
   return map[f] || f;
 };
+
+const planEditOptions = computed(() =>
+  planes.value.map((p) => ({
+    value: p.id,
+    label: `${p.membership_type?.name || "Plan"} (${traducirFrecuencia(p.frequency)})`,
+  }))
+);
+
+const planAsignarOptions = computed(() =>
+  planes.value.map((p) => ({
+    value: p.id,
+    label: `${p.membership_type?.name || "Plan"} - ${traducirFrecuencia(p.frequency)} - $${parseInt(p.price).toLocaleString()}`,
+  }))
+);
+
+const estadoMembresiaOptions = [
+  { value: "active", label: "Activa" },
+  { value: "expired", label: "Vencida" },
+  { value: "inactive_unpaid", label: "Por Pagar" },
+  { value: "cancelled", label: "Cancelada" },
+];
 
 const traducirEstado = (s) => {
   const map = {

@@ -5,9 +5,7 @@
       <div class="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-default-soft">
         <div class="flex items-center gap-4">
           <div class="w-11 h-11 rounded-xl bg-primary-100 flex items-center justify-center shrink-0">
-            <svg class="w-6 h-6 text-primary-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
+            <User class="w-5 h-5 text-primary-700" aria-hidden="true" />
           </div>
           <div>
             <h1 class="text-xl font-bold text-default tracking-tight leading-tight">
@@ -23,9 +21,7 @@
           class="p-2 hover:bg-[var(--color-overlay)] rounded-full transition-colors"
           aria-label="Cerrar"
         >
-          <svg class="w-5 h-5 text-muted" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <X class="w-5 h-5 text-muted" aria-hidden="true" />
         </router-link>
       </div>
 
@@ -200,6 +196,7 @@
           :loading="loading"
           :disabled="loading"
         >
+          <Save class="w-4 h-4 mr-2 inline" aria-hidden="true" />
           Guardar Cambios
         </BaseButton>
       </div>
@@ -209,7 +206,9 @@
 
 <script setup>
 import { reactive, ref, onMounted } from "vue";
+
 import { useRoute, useRouter } from "vue-router";
+import { User, X, Save } from 'lucide-vue-next'
 import api from "@/axios";
 import Swal from "sweetalert2";
 import FingerprintEnroll from "@/components/FingerprintEnroll.vue";

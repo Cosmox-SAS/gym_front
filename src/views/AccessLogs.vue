@@ -3,16 +3,22 @@
     <div class="max-w-5xl mx-auto">
       <BaseCard title="Registro de Ingresos" subtitle="Historial de accesos al gimnasio" class="space-y-4">
         <template #actions>
-          <router-link :to="{ name: 'Menu' }" class="btn btn-secondary">Volver</router-link>
+          <router-link :to="{ name: 'Menu' }" class="btn btn-secondary inline-flex items-center justify-center gap-2">
+            <ArrowLeft class="w-4 h-4" aria-hidden="true" />
+            <span>Volver</span>
+          </router-link>
         </template>
 
         <div class="flex flex-col sm:flex-row gap-3">
-          <BaseInput
-            v-model="search"
-            type="text"
-            placeholder="Buscar por nombre o identificación..."
-            class="flex-1"
-          />
+          <div class="relative flex-1">
+            <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none z-10" aria-hidden="true" />
+            <BaseInput
+              v-model="search"
+              type="text"
+              placeholder="Buscar por nombre o identificación..."
+              class="pl-10"
+            />
+          </div>
           <BaseSelect
             v-model="filterMethod"
             :options="methodOptions"
@@ -46,6 +52,7 @@
                 <td class="text-muted">{{ log.member?.identification ?? '—' }}</td>
                 <td>
                   <BaseBadge :color="log.method === 'huella' ? 'violet' : 'blue'">
+                    <component :is="log.method === 'huella' ? Fingerprint : IdCard" class="w-3 h-3" aria-hidden="true" />
                     {{ log.method === 'huella' ? 'Huella' : 'Cédula' }}
                   </BaseBadge>
                 </td>
@@ -54,6 +61,7 @@
                     :color="log.status === 'permitido' ? 'green' : 'red'"
                     dot
                   >
+                    <component :is="log.status === 'permitido' ? Check : X" class="w-3 h-3" aria-hidden="true" />
                     {{ log.status === 'permitido' ? 'Permitido' : 'Denegado' }}
                   </BaseBadge>
                 </td>
@@ -77,6 +85,7 @@
               :disabled="meta.current_page === 1"
               @click="changePage(meta.current_page - 1)"
             >
+              <ChevronLeft class="w-4 h-4" aria-hidden="true" />
               Anterior
             </BaseButton>
             <BaseButton
@@ -86,6 +95,7 @@
               @click="changePage(meta.current_page + 1)"
             >
               Siguiente
+              <ChevronRight class="w-4 h-4" aria-hidden="true" />
             </BaseButton>
           </div>
         </div>
@@ -98,6 +108,16 @@
 import { ref, computed, onMounted } from 'vue'
 import api from '@/axios'
 import { BaseSelect, BaseInput, BaseButton, BaseCard, BaseBadge } from '@/components/ui'
+import {
+  ArrowLeft,
+  Search,
+  Fingerprint,
+  IdCard,
+  Check,
+  X,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-vue-next'
 
 const methodOptions = [
   { value: '', label: 'Todos los métodos' },

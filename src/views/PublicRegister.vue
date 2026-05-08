@@ -15,15 +15,20 @@
 
         <!-- Estado de éxito -->
         <div v-if="successMessage" class="text-center p-4 bg-green-100 text-green-700 rounded-lg">
+          <CheckCircle2 class="w-12 h-12 mx-auto mb-2 text-green-600" aria-hidden="true" />
           <h2 class="text-2xl font-bold mb-2">¡Registro Exitoso!</h2>
           <p>{{ successMessage }}</p>
         </div>
 
         <!-- Estado de carga o formulario -->
         <div v-else>
-          <h2 class="text-2xl font-bold mb-6 text-center text-default">Formulario de Inscripción</h2>
+          <h2 class="text-2xl font-bold mb-6 text-center text-default flex items-center justify-center gap-2">
+            <UserPlus class="w-6 h-6" aria-hidden="true" />
+            Formulario de Inscripción
+          </h2>
 
-          <div v-if="loading" class="text-center text-muted">
+          <div v-if="loading" class="text-center text-muted flex items-center justify-center gap-2">
+            <Loader2 class="w-5 h-5 animate-spin" aria-hidden="true" />
             Cargando planes...
           </div>
 
@@ -31,33 +36,51 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-muted text-sm mb-1">Nombre Completo</label>
+                <label class="block text-muted text-sm mb-1 flex items-center gap-1">
+                  <User class="w-3 h-3" aria-hidden="true" />
+                  Nombre Completo
+                </label>
                 <input v-model="form.name" type="text" class="input-field" required />
               </div>
               <div>
-                <label class="block text-muted text-sm mb-1">Identificación (Cédula)</label>
+                <label class="block text-muted text-sm mb-1 flex items-center gap-1">
+                  <IdCard class="w-3 h-3" aria-hidden="true" />
+                  Identificación (Cédula)
+                </label>
                 <input v-model="form.identification" type="text" class="input-field" required />
               </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-muted text-sm mb-1">Correo</label>
+                <label class="block text-muted text-sm mb-1 flex items-center gap-1">
+                  <Mail class="w-3 h-3" aria-hidden="true" />
+                  Correo
+                </label>
                 <input v-model="form.email" type="email" class="input-field" required/>
               </div>
               <div>
-                <label class="block text-muted text-sm mb-1">Teléfono</label>
+                <label class="block text-muted text-sm mb-1 flex items-center gap-1">
+                  <Phone class="w-3 h-3" aria-hidden="true" />
+                  Teléfono
+                </label>
                 <input v-model="form.phone" type="tel" class="input-field" required/>
               </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-muted text-sm mb-1">Fecha de Nacimiento</label>
+                <label class="block text-muted text-sm mb-1 flex items-center gap-1">
+                  <Calendar class="w-3 h-3" aria-hidden="true" />
+                  Fecha de Nacimiento
+                </label>
                 <input v-model="form.birth_date" type="date" class="input-field" required />
               </div>
               <div>
-                <label class="block text-muted text-sm mb-1">Sexo</label>
+                <label class="block text-muted text-sm mb-1 flex items-center gap-1">
+                  <Users class="w-3 h-3" aria-hidden="true" />
+                  Sexo
+                </label>
                 <BaseSelect
                   v-model="form.sexo"
                   placeholder="Seleccione..."
@@ -69,11 +92,17 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-muted text-sm mb-1">Peso (kg)</label>
+                <label class="block text-muted text-sm mb-1 flex items-center gap-1">
+                  <Scale class="w-3 h-3" aria-hidden="true" />
+                  Peso (kg)
+                </label>
                 <input v-model.number="form.peso" type="number" step="0.1" class="input-field" placeholder="Ej. 70.5" />
               </div>
               <div>
-                <label class="block text-muted text-sm mb-1">Estatura (m)</label>
+                <label class="block text-muted text-sm mb-1 flex items-center gap-1">
+                  <Ruler class="w-3 h-3" aria-hidden="true" />
+                  Estatura (m)
+                </label>
                 <input v-model.number="form.estatura" type="number" step="0.01" class="input-field" placeholder="Ej. 1.75" />
               </div>
             </div>
@@ -81,7 +110,10 @@
             <!-- CAMPO 'OBJETIVO' ELIMINADO -->
 
             <div>
-              <label class="block text-muted text-sm mb-1">Plan de Membresía</label>
+              <label class="block text-muted text-sm mb-1 flex items-center gap-1">
+                <CalendarCheck2 class="w-3 h-3" aria-hidden="true" />
+                Plan de Membresía
+              </label>
               <BaseSelect
                 v-model="form.plan_id"
                 placeholder="Seleccione el plan que desea"
@@ -95,16 +127,19 @@
               />
             </div>
 
-            <div v-if="errorMessage" class="text-red-600 text-sm text-center">
+            <div v-if="errorMessage" class="text-red-600 text-sm text-center flex items-center justify-center gap-1">
+              <AlertCircle class="w-4 h-4" aria-hidden="true" />
               {{ errorMessage }}
             </div>
 
             <button
               type="submit"
-              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-200"
+              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-200 inline-flex items-center justify-center gap-2"
               :disabled="loading"
             >
-              {{ loading ? 'Registrando...' : 'Inscribirme' }}
+              <Loader2 v-if="loading" class="w-4 h-4 animate-spin" aria-hidden="true" />
+              <UserPlus v-else class="w-4 h-4" aria-hidden="true" />
+              <span>{{ loading ? 'Registrando...' : 'Inscribirme' }}</span>
             </button>
           </form>
         </div>
@@ -132,6 +167,21 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/axios' // Usamos la instancia de Axios
 import { BaseSelect } from '@/components/ui'
+import {
+  User,
+  IdCard,
+  Mail,
+  Phone,
+  Calendar,
+  Users,
+  Scale,
+  Ruler,
+  CalendarCheck2,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  UserPlus,
+} from 'lucide-vue-next'
 
 const SEXO_OPTIONS = [
   { value: 'masculino', label: 'Masculino' },

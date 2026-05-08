@@ -9,8 +9,14 @@
           <p class="page-subtitle">Consulta y registra pagos</p>
         </div>
         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-          <router-link to="/Menu" class="btn btn-secondary flex-1 sm:flex-none">Inicio</router-link>
-          <button @click="openModal = true" class="btn btn-success flex-1 sm:flex-none">Registrar pago</button>
+          <router-link to="/Menu" class="btn btn-secondary flex-1 sm:flex-none inline-flex items-center justify-center gap-2">
+            <Home class="w-4 h-4" aria-hidden="true" />
+            <span>Inicio</span>
+          </router-link>
+          <button @click="openModal = true" class="btn btn-success flex-1 sm:flex-none inline-flex items-center justify-center gap-2">
+            <Plus class="w-4 h-4" aria-hidden="true" />
+            <span>Registrar pago</span>
+          </button>
         </div>
       </div>
 
@@ -36,10 +42,12 @@
 
         <button
           @click="cargarHistorial"
-          class="btn btn-primary w-full sm:w-auto justify-center"
+          class="btn btn-primary w-full sm:w-auto justify-center inline-flex items-center gap-2"
           :disabled="loadingHistorial"
         >
-          {{ loadingHistorial ? "⏳" : "🔍 Consultar" }}
+          <Loader2 v-if="loadingHistorial" class="w-4 h-4 animate-spin" aria-hidden="true" />
+          <Search v-else class="w-4 h-4" aria-hidden="true" />
+          <span>{{ loadingHistorial ? 'Cargando...' : 'Consultar' }}</span>
         </button>
       </div>
 
@@ -47,7 +55,7 @@
         class="p-4 mb-6 rounded-r-xl shadow-sm flex flex-col sm:flex-row justify-between items-center gap-2 text-center sm:text-left border-l-4"
         style="background: var(--color-surface-soft); border-color: #10b981; border-top: 1px solid var(--color-border); border-right: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border);"
       >
-        <span class="text-sm sm:text-lg font-semibold" style="color: var(--color-text-muted);">💰 Total en rango:</span>
+        <span class="text-sm sm:text-lg font-semibold" style="color: var(--color-text-muted);">Total en rango:</span>
         <span
           class="text-xl sm:text-2xl font-bold px-4 py-1 rounded shadow-sm w-full sm:w-auto"
           style="background: var(--color-surface); border: 1px solid var(--color-border); color: #10b981;"
@@ -97,12 +105,14 @@
         <span>Página {{ currentPagePagos }} de {{ totalPagesPagos }}</span>
         <div class="flex gap-1">
           <button @click="currentPagePagos--" :disabled="currentPagePagos === 1"
-            class="px-3 py-1 rounded border border-default-soft bg-[var(--color-surface)] hover:bg-[var(--color-surface-soft)] disabled:opacity-40 disabled:cursor-not-allowed">
-            ← Anterior
+            class="px-3 py-1 rounded border border-default-soft bg-[var(--color-surface)] hover:bg-[var(--color-surface-soft)] disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-1">
+            <ChevronLeft class="w-4 h-4" aria-hidden="true" />
+            <span>Anterior</span>
           </button>
           <button @click="currentPagePagos++" :disabled="currentPagePagos === totalPagesPagos"
-            class="px-3 py-1 rounded border border-default-soft bg-[var(--color-surface)] hover:bg-[var(--color-surface-soft)] disabled:opacity-40 disabled:cursor-not-allowed">
-            Siguiente →
+            class="px-3 py-1 rounded border border-default-soft bg-[var(--color-surface)] hover:bg-[var(--color-surface-soft)] disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center gap-1">
+            <span>Siguiente</span>
+            <ChevronRight class="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -117,6 +127,7 @@
           :style="{ background: 'var(--modal-panel-bg)', border: '1px solid var(--modal-panel-border)' }"
         >
           <h2 id="payments-modal-title" class="text-lg font-bold mb-4 text-default border-b border-default-soft pb-2 flex items-center gap-2">
+            <CreditCard class="w-5 h-5" aria-hidden="true" />
             Registrar Pago
           </h2>
 
@@ -160,27 +171,28 @@
 
             <div>
               <label class="block mb-1 text-xs font-bold text-muted uppercase">Método</label>
-              <select
+              <BaseSelect
                 v-model="nuevoPago.payment_method_id"
+                placeholder="Seleccionar..."
                 required
-                class="field-input"
-              >
-                <option disabled value="">Seleccionar...</option>
-                <option v-for="m in metodosPago" :key="m.id" :value="m.id">{{ m.name }}</option>
-              </select>
+                :options="metodoPagoOptions"
+              />
             </div>
 
             <div class="flex justify-end gap-2 pt-4 border-t mt-2">
               <button
                 type="button"
                 @click="cerrarModal"
-                class="btn btn-secondary flex-1"
+                class="btn btn-secondary flex-1 inline-flex items-center justify-center gap-2"
                 :disabled="ProcesandoPago"
               >
-                Cancelar
+                <X class="w-4 h-4" aria-hidden="true" />
+                <span>Cancelar</span>
               </button>
-              <button type="submit" class="btn btn-primary flex-1" :disabled="ProcesandoPago">
-                {{ ProcesandoPago ? "💾..." : "Guardar" }}
+              <button type="submit" class="btn btn-primary flex-1 inline-flex items-center justify-center gap-2" :disabled="ProcesandoPago">
+                <Loader2 v-if="ProcesandoPago" class="w-4 h-4 animate-spin" aria-hidden="true" />
+                <Check v-else class="w-4 h-4" aria-hidden="true" />
+                <span>{{ ProcesandoPago ? "Guardando..." : "Guardar" }}</span>
               </button>
             </div>
           </form>
@@ -192,9 +204,22 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
+
 import api from "@/axios";
 import dayjs from "dayjs";
 import Swal from "sweetalert2";
+import {
+  Home,
+  Plus,
+  Search,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  CreditCard,
+  X,
+  Check,
+} from "lucide-vue-next";
+import { BaseSelect } from "@/components/ui";
 // --- ESTADO ---
 const pagos = ref([]);
 const currentPagePagos = ref(1);
@@ -218,6 +243,10 @@ const filtros = ref({
 });
 
 const nuevoPago = ref({ member_id: "", amount: "", payment_method_id: "" });
+
+const metodoPagoOptions = computed(() =>
+  metodosPago.value.map((m) => ({ value: m.id, label: m.name }))
+);
 
 // --- FUNCIONES ---
 const cargarHistorial = async () => {

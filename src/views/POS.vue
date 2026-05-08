@@ -3,12 +3,17 @@
 
     <!-- ═══ HEADER ═══ -->
     <header class="pos-header">
-      <h1 class="text-lg md:text-xl font-bold">Punto de Venta</h1>
+      <h1 class="text-lg md:text-xl font-bold inline-flex items-center gap-2">
+        <ShoppingCart class="w-5 h-5" aria-hidden="true" />
+        Punto de Venta
+      </h1>
       <div class="flex gap-2">
-        <router-link to="/Products" class="btn btn-indigo px-3 py-2 text-xs sm:text-sm">
+        <router-link to="/Products" class="btn btn-indigo px-3 py-2 text-xs sm:text-sm inline-flex items-center gap-2">
+          <Boxes class="w-4 h-4" aria-hidden="true" />
           Inventario
         </router-link>
-        <router-link to="/Menu" class="btn btn-dark px-3 py-2 text-xs sm:text-sm">
+        <router-link to="/Menu" class="btn btn-dark px-3 py-2 text-xs sm:text-sm inline-flex items-center gap-2">
+          <Home class="w-4 h-4" aria-hidden="true" />
           Salir
         </router-link>
       </div>
@@ -22,47 +27,18 @@
 
         <!-- Barra de filtros -->
         <div class="pos-filters">
-          <div class="flex-1 relative client-select-wrap" ref="clientSelectRef">
-            <input
-              type="text"
-              v-model="clientSearchText"
-              @focus="isClientDropdownOpen = true"
-              @input="isClientDropdownOpen = true; selectedMemberId = ''"
-              class="pos-client-select w-full"
+          <div class="flex-1">
+            <BaseSelect
+              v-model="selectedMemberId"
+              :options="memberOptions"
               placeholder="Seleccionar Cliente"
+              searchable
+              empty-text="No se encontraron clientes"
             />
-            <button
-              v-if="clientSearchText"
-              @click.stop="clearClientSelection"
-              class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 hover:text-red-500 transition-colors flex items-center justify-center cursor-pointer z-10"
-              title="Borrar selección"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <svg v-else class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
-            <ul v-if="isClientDropdownOpen" class="absolute z-50 w-full mt-1 bg-white dark:bg-[#1f2937] border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              <li
-                v-if="filteredClientOptions.length === 0"
-                class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400"
-              >
-                No se encontraron clientes
-              </li>
-              <li
-                v-for="member in filteredClientOptions"
-                :key="member.id"
-                @click="selectMember(member)"
-                class="px-4 py-2.5 text-sm cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/30 text-gray-700 dark:text-gray-200 transition-colors"
-                :class="{ 'bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-semibold': selectedMemberId === member.id }"
-              >
-                {{ member.name }}
-              </li>
-            </ul>
           </div>
           <div class="flex-1 relative search-input-wrap">
             <div class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-gray-400 dark:text-gray-500">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+              <Search class="w-4 h-4" aria-hidden="true" />
             </div>
             <input v-model="search" type="text" placeholder="Buscar producto por nombre..." class="field-input text-sm pos-search-input">
           </div>
@@ -98,16 +74,20 @@
         <!-- Ticket header -->
         <div class="pos-ticket-header">
           <h3 class="font-bold flex items-center gap-2" style="color: var(--color-text);">
-            🧾 Ticket
+            <Receipt class="w-4 h-4" aria-hidden="true" />
+            Ticket
             <span class="badge badge-blue text-xs px-2 py-0.5 rounded-full">{{ cart.length }} items</span>
           </h3>
-          <button @click="cart = []" v-if="cart.length > 0" class="text-xs text-red-400 hover:text-red-300 hover:underline cursor-pointer">Vaciar</button>
+          <button @click="cart = []" v-if="cart.length > 0" class="text-xs text-red-400 hover:text-red-300 hover:underline cursor-pointer inline-flex items-center gap-1">
+            <Trash2 class="w-3.5 h-3.5" aria-hidden="true" />
+            Vaciar
+          </button>
         </div>
 
         <!-- Ticket items -->
         <div class="pos-ticket-items">
           <div v-if="cart.length === 0" class="h-full flex flex-col items-center justify-center opacity-40">
-            <svg class="w-10 h-10 mb-2" style="color: var(--color-text-subtle);" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"/></svg>
+            <ShoppingCart class="w-8 h-8" aria-hidden="true" />
             <p class="text-sm" style="color: var(--color-text-subtle);">Carrito vacío</p>
           </div>
 
@@ -120,7 +100,9 @@
             </div>
             <div class="flex items-center gap-3">
               <span class="font-bold" style="color: var(--color-text-soft);">${{ formatCurrency(item.price * item.quantity) }}</span>
-              <button @click="removeFromCart(index)" class="pos-remove-btn">×</button>
+              <button @click="removeFromCart(index)" class="pos-remove-btn" aria-label="Quitar del carrito">
+                <X class="w-4 h-4" aria-hidden="true" />
+              </button>
             </div>
           </div>
         </div>
@@ -135,10 +117,16 @@
           <button
             @click="procesarVenta"
             :disabled="cart.length === 0 || !selectedMemberId"
-            class="pos-cobrar-btn"
+            class="pos-cobrar-btn inline-flex items-center justify-center gap-2"
           >
-            <template v-if="!selectedMemberId">Selecciona Cliente</template>
-            <template v-else>COBRAR</template>
+            <template v-if="!selectedMemberId">
+              <UserCircle class="w-5 h-5" aria-hidden="true" />
+              Selecciona Cliente
+            </template>
+            <template v-else>
+              <CreditCard class="w-5 h-5" aria-hidden="true" />
+              COBRAR
+            </template>
           </button>
         </div>
       </div>
@@ -148,8 +136,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+
 import api from '@/axios'
+import { Search, ShoppingCart, X, Boxes, Home, Receipt, Trash2, UserCircle, CreditCard } from 'lucide-vue-next'
+import { BaseSelect } from '@/components/ui'
 import Swal from 'sweetalert2'
 import dayjs from 'dayjs'
 
@@ -159,35 +150,9 @@ const cart = ref([])
 const search = ref('')
 const selectedMemberId = ref('')
 
-const clientSearchText = ref('')
-const isClientDropdownOpen = ref(false)
-const clientSelectRef = ref(null)
-
-const filteredClientOptions = computed(() => {
-  if (!clientSearchText.value) return members.value
-  const lower = clientSearchText.value.toLowerCase()
-  return members.value.filter(m => m.name.toLowerCase().includes(lower))
-})
-
-const selectMember = (member) => {
-  selectedMemberId.value = member.id
-  clientSearchText.value = member.name
-  isClientDropdownOpen.value = false
-}
-
-const clearClientSelection = () => {
-  selectedMemberId.value = ''
-  clientSearchText.value = ''
-  isClientDropdownOpen.value = false
-}
-
-const handleClickOutside = (e) => {
-  if (clientSelectRef.value && !clientSelectRef.value.contains(e.target)) {
-    isClientDropdownOpen.value = false
-    const m = members.value.find(x => x.id === selectedMemberId.value)
-    clientSearchText.value = m ? m.name : ''
-  }
-}
+const memberOptions = computed(() =>
+  members.value.map((m) => ({ value: m.id, label: m.name }))
+)
 
 const fetchData = async () => {
   try {
@@ -264,7 +229,6 @@ const procesarVenta = async () => {
 
     cart.value = []
     selectedMemberId.value = ''
-    clientSearchText.value = ''
     fetchData()
   } catch (error) {
     console.error(error)
@@ -274,11 +238,6 @@ const procesarVenta = async () => {
 
 onMounted(() => {
   fetchData()
-  document.addEventListener('click', handleClickOutside)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
 })
 </script>
 
@@ -356,62 +315,6 @@ onUnmounted(() => {
 /* ═══════════════════════════════════════════
    Estilos Premium para los Inputs de Filtro
    ═══════════════════════════════════════════ */
-.client-select-wrap input {
-  height: 3rem;
-  font-weight: 600;
-  border: 1.5px solid rgba(59, 130, 246, 0.3);
-  background: rgba(59, 130, 246, 0.04);
-  color: var(--color-text);
-  border-radius: 0.75rem;
-  transition: all 0.3s ease;
-  font-size: 0.95rem;
-  padding-left: 1rem;
-  padding-right: 2.5rem;
-  outline: none;
-}
-.client-select-wrap input::placeholder {
-  color: var(--color-text);
-  opacity: 0.85;
-}
-.client-select-wrap input:hover {
-  background: rgba(59, 130, 246, 0.08);
-  border-color: rgba(59, 130, 246, 0.5);
-}
-.client-select-wrap input:focus {
-  border-color: #3b82f6;
-  background: var(--color-surface);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
-}
-:global(.dark) .client-select-wrap input {
-  background: rgba(96, 165, 250, 0.08);
-  border-color: rgba(96, 165, 250, 0.25);
-  color: #93c5fd;
-}
-:global(.dark) .client-select-wrap input::placeholder {
-  color: rgba(147, 197, 253, 0.7);
-}
-:global(.dark) .client-select-wrap input:hover {
-  background: rgba(96, 165, 250, 0.12);
-  border-color: rgba(96, 165, 250, 0.4);
-}
-:global(.dark) .client-select-wrap input:focus {
-  background: var(--color-surface);
-  border-color: #60a5fa;
-  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.2);
-}
-
-/* Custom Scrollbar for dropdown */
-.client-select-wrap ul::-webkit-scrollbar {
-  width: 6px;
-}
-.client-select-wrap ul::-webkit-scrollbar-track {
-  background: transparent;
-}
-.client-select-wrap ul::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.5);
-  border-radius: 4px;
-}
-
 .search-input-wrap .pos-search-input {
   padding-left: 2.75rem;
   height: 3rem;

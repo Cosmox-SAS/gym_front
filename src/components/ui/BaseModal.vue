@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, watch } from 'vue'
+import { X } from 'lucide-vue-next'
 
 type Size = 'sm' | 'md' | 'lg' | 'xl'
 
@@ -93,19 +94,7 @@ watch(
             aria-label="Cerrar"
             @click="close"
           >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <X class="w-5 h-5" aria-hidden="true" />
           </button>
         </header>
 

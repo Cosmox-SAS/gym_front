@@ -9,44 +9,60 @@
       :style="{ background: 'var(--modal-panel-bg)', borderLeft: '1px solid var(--modal-panel-border)', borderRight: '1px solid var(--modal-panel-border)', borderBottom: '1px solid var(--modal-panel-border)' }"
     >
       <h2 id="member-payment-modal-title" class="text-xl font-bold mb-2 text-default flex items-center gap-2">
+        <CreditCard class="w-5 h-5 text-emerald-600" aria-hidden="true" />
         Registrar Pago
       </h2>
-      <p class="text-sm text-muted mb-4">
+      <p class="text-sm text-muted mb-4 inline-flex items-center gap-1.5">
+        <User class="w-4 h-4" aria-hidden="true" />
         Cliente: <strong>{{ member?.name }}</strong>
       </p>
 
-      <div v-if="loadingBalance" class="text-center py-4">Buscando deuda...</div>
+      <div v-if="loadingBalance" class="text-center py-4 inline-flex items-center justify-center gap-2 w-full">
+        <Loader2 class="w-4 h-4 animate-spin" aria-hidden="true" />
+        Buscando deuda...
+      </div>
 
       <form v-else @submit.prevent="pagar">
         <div class="mb-4 bg-[var(--color-surface-soft)] p-3 rounded border border-default-soft">
-          <p class="text-sm text-muted">Monto a pagar:</p>
+          <p class="text-sm text-muted inline-flex items-center gap-1.5">
+            <Wallet class="w-4 h-4" aria-hidden="true" />
+            Monto a pagar:
+          </p>
           <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
             {{ formatCurrency(amount) }}
           </p>
         </div>
 
         <div class="mb-4">
-          <label class="block mb-1 text-sm font-medium">Método de Pago</label>
-          <select v-model="paymentMethodId" class="field-input" required>
-            <option value="" disabled>Seleccione...</option>
-            <option v-for="m in paymentMethods" :key="m.id" :value="m.id">{{ m.name }}</option>
-          </select>
+          <label class="block mb-1 text-sm font-medium inline-flex items-center gap-1.5">
+            <Banknote class="w-4 h-4 text-muted" aria-hidden="true" />
+            Método de Pago
+          </label>
+          <BaseSelect
+            v-model="paymentMethodId"
+            placeholder="Seleccione..."
+            required
+            :options="paymentMethodOptions"
+          />
         </div>
 
         <div class="flex justify-end gap-3 mt-6">
           <button
             type="button"
             @click="$emit('close')"
-            class="btn btn-secondary"
+            class="btn btn-secondary inline-flex items-center gap-2"
           >
+            <X class="w-4 h-4" aria-hidden="true" />
             Cancelar
           </button>
           <button
             type="submit"
-            class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-bold shadow-lg"
+            class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-bold shadow-lg flex items-center gap-2"
             :disabled="processing"
           >
-            {{ processing ? "Procesando..." : "✅ Confirmar Pago" }}
+            <Loader2 v-if="processing" class="w-4 h-4 animate-spin" aria-hidden="true" />
+            <Check v-else class="w-4 h-4" aria-hidden="true" />
+            {{ processing ? 'Procesando...' : 'Confirmar Pago' }}
           </button>
         </div>
       </form>
@@ -56,9 +72,11 @@
 
 // eslint-disable-next-line vue/block-lang
 <script setup>
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, computed } from "vue";
 import api from "@/axios";
 import Swal from "sweetalert2";
+import { CreditCard, User, Wallet, Banknote, X, Check, Loader2 } from "lucide-vue-next";
+import { BaseSelect } from "@/components/ui";
 
 const props = defineProps({
   show: Boolean,
@@ -72,6 +90,10 @@ const amount = ref(0);
 const paymentMethodId = ref("");
 const loadingBalance = ref(false);
 const processing = ref(false);
+
+const paymentMethodOptions = computed(() =>
+  paymentMethods.value.map((m) => ({ value: m.id, label: m.name }))
+);
 
 // Cargar métodos de pago una sola vez
 onMounted(async () => {

@@ -3,30 +3,41 @@
     <div class="max-w-3xl mx-auto">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div class="flex items-center gap-3">
+          <Settings class="w-8 h-8 text-default" aria-hidden="true" />
           <div>
             <h1 class="text-2xl sm:text-3xl font-bold text-default tracking-tight">Configuración</h1>
             <p class="text-sm text-subtle mt-0.5">Personalización del gimnasio</p>
           </div>
         </div>
-        <router-link to="/Menu" class="btn btn-dark">Inicio</router-link>
+        <router-link to="/Menu" class="btn btn-dark inline-flex items-center justify-center gap-2">
+          <Home class="w-4 h-4" aria-hidden="true" />
+          <span>Inicio</span>
+        </router-link>
       </div>
 
       <div class="bg-[var(--color-surface)] rounded-2xl shadow-xl p-6 sm:p-8 text-default animate-fade-in-up border border-default-soft">
         <div class="border-b border-default-soft pb-4 mb-6">
-          <h2 class="text-xl font-bold" style="color: var(--color-text);">Personalización de Bienvenida</h2>
+          <h2 class="text-xl font-bold flex items-center gap-2" style="color: var(--color-text);">
+            <Mail class="w-5 h-5" aria-hidden="true" />
+            Personalización de Bienvenida
+          </h2>
           <p class="text-sm text-muted">
             Esta información se enviará automáticamente por correo a los nuevos clientes.
           </p>
         </div>
 
         <div v-if="loading" class="text-center py-10">
-          <p class="text-blue-600 font-bold animate-pulse">Cargando configuración...</p>
+          <p class="text-blue-600 font-bold animate-pulse flex items-center justify-center gap-2">
+            <Loader2 class="w-5 h-5 animate-spin" aria-hidden="true" />
+            Cargando configuración...
+          </p>
         </div>
 
         <form v-else @submit.prevent="guardarConfiguracion" class="space-y-6">
           <div>
-            <label class="block text-sm font-bold text-muted mb-2 uppercase tracking-wide">
-              🕒 Horarios de Atención
+            <label class="block text-sm font-bold text-muted mb-2 uppercase tracking-wide flex items-center gap-2">
+              <Clock class="w-4 h-4" aria-hidden="true" />
+              Horarios de Atención
             </label>
             <div class="relative">
               <textarea
@@ -35,14 +46,15 @@
                 class="field-input rounded-xl p-3"
                 placeholder="Ej: Lunes a Viernes: 6:00 AM - 10:00 PM&#10;Sábados: 8:00 AM - 4:00 PM"
               ></textarea>
-              <div class="absolute top-3 right-3 text-xl opacity-50">📅</div>
+
             </div>
             <p class="text-xs text-muted mt-1">Aparecerá en el correo de bienvenida.</p>
           </div>
 
           <div>
-            <label class="block text-sm font-bold text-muted mb-2 uppercase tracking-wide">
-              📜 Normas y Políticas
+            <label class="block text-sm font-bold text-muted mb-2 uppercase tracking-wide flex items-center gap-2">
+              <FileText class="w-4 h-4" aria-hidden="true" />
+              Normas y Políticas
             </label>
             <div class="relative">
               <textarea
@@ -51,7 +63,7 @@
                 class="field-input rounded-xl p-3"
                 placeholder="Ej: 1. Uso obligatorio de toalla.&#10;2. Ordenar las pesas al terminar.&#10;3. No ingresar alimentos."
               ></textarea>
-              <div class="absolute top-3 right-3 text-xl opacity-50">⚖️</div>
+
             </div>
           </div>
 
@@ -59,7 +71,8 @@
             <label
               class="block text-sm font-bold mb-2 uppercase tracking-wide flex items-center gap-2 text-emerald-600 dark:text-emerald-400"
             >
-              <span class="text-xl">📲</span> Enlace Grupo WhatsApp
+              <MessageCircle class="w-4 h-4" aria-hidden="true" />
+              Enlace Grupo WhatsApp
             </label>
             <input
               v-model="form.url_grupo_whatsapp"
@@ -76,7 +89,8 @@
           <!-- SECCIÓN CÓDIGO QR -->
           <div class="border-t pt-6" v-if="qrImageUrl">
             <h3 class="text-lg font-bold text-default mb-2 flex items-center gap-2">
-              🏁 Código QR de Registro
+              <QrCode class="w-5 h-5" aria-hidden="true" />
+              Código QR de Registro
             </h3>
             <p class="text-sm text-muted mb-4">
               Imprime este código y colócalo en la recepción. Los clientes podrán escanearlo para
@@ -99,19 +113,22 @@
                   @click="descargarImagen"
                   class="btn btn-dark flex items-center justify-center gap-2 text-sm"
                 >
-                  📥 Descargar Imagen
+                  <Download class="w-4 h-4" aria-hidden="true" />
+                  Descargar Imagen
                 </button>
                 <button
                   @click="imprimirQR"
                   class="btn btn-primary flex items-center justify-center gap-2 text-sm"
                 >
-                  🖨️ Imprimir / Guardar PDF
+                  <Printer class="w-4 h-4" aria-hidden="true" />
+                  Imprimir / Guardar PDF
                 </button>
                 <a
                   :href="registrationUrl"
                   target="_blank"
-                  class="text-blue-600 underline text-sm text-center mt-2"
+                  class="text-blue-600 underline text-sm text-center mt-2 inline-flex items-center justify-center gap-1"
                 >
+                  <ExternalLink class="w-3 h-3" aria-hidden="true" />
                   Probar enlace de registro
                 </a>
               </div>
@@ -124,8 +141,9 @@
               class="btn btn-primary px-8 py-3 text-lg shadow-lg hover:shadow-xl transition transform active:scale-95 flex items-center gap-2"
               :disabled="guardando"
             >
-              <span v-if="guardando" class="animate-spin">🔄</span>
-              {{ guardando ? "Guardando..." : "💾 Guardar Cambios" }}
+              <Loader2 v-if="guardando" class="w-5 h-5 animate-spin" aria-hidden="true" />
+              <Save v-else class="w-5 h-5" aria-hidden="true" />
+              <span>{{ guardando ? "Guardando..." : "Guardar Cambios" }}</span>
             </button>
           </div>
         </form>
@@ -136,8 +154,23 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
+
 import api from "@/axios";
 import Swal from "sweetalert2";
+import {
+  Settings,
+  Home,
+  Mail,
+  Clock,
+  FileText,
+  MessageCircle,
+  QrCode,
+  Download,
+  Printer,
+  ExternalLink,
+  Save,
+  Loader2,
+} from "lucide-vue-next";
 
 const loading = ref(true);
 const guardando = ref(false);

@@ -8,17 +8,24 @@
           <h1 class="text-2xl sm:text-3xl font-bold text-default tracking-tight">Suscripción</h1>
           <p class="text-sm text-subtle mt-0.5">Gestiona tu plan y funcionalidades</p>
         </div>
-        <router-link to="/Menu" class="btn btn-dark">Inicio</router-link>
+        <router-link to="/Menu" class="btn btn-dark inline-flex items-center justify-center gap-2">
+          <Home class="w-4 h-4" aria-hidden="true" />
+          <span>Inicio</span>
+        </router-link>
       </div>
 
       <div v-if="loading" class="text-center py-16">
-        <p class="text-blue-600 font-bold animate-pulse">Cargando suscripción...</p>
+        <p class="text-blue-600 font-bold animate-pulse flex items-center justify-center gap-2">
+          <Loader2 class="w-5 h-5 animate-spin" aria-hidden="true" />
+          Cargando suscripción...
+        </p>
       </div>
 
       <div v-else class="space-y-6">
 
         <!-- Sin suscripción -->
         <div v-if="!subscription" class="bg-[var(--color-surface-soft)] border border-[var(--color-border)] rounded-2xl p-6 text-center">
+          <AlertCircle class="w-10 h-10 mx-auto mb-2 text-amber-600" aria-hidden="true" />
           <p class="text-amber-700 font-semibold text-lg mb-1">No tienes una suscripción activa</p>
           <p class="text-amber-600 text-sm">Elige un plan para comenzar.</p>
         </div>
@@ -38,15 +45,24 @@
 
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 my-6">
             <div class="bg-[var(--color-surface-soft)] rounded-xl p-4 border border-default-soft">
-              <p class="text-xs text-subtle font-semibold uppercase tracking-wide mb-1">Inicio</p>
+              <p class="text-xs text-subtle font-semibold uppercase tracking-wide mb-1 flex items-center gap-1">
+                <Calendar class="w-3 h-3" aria-hidden="true" />
+                Inicio
+              </p>
               <p class="text-sm font-bold text-default">{{ formatDate(subscription.started_at) }}</p>
             </div>
             <div class="bg-[var(--color-surface-soft)] rounded-xl p-4 border border-default-soft">
-              <p class="text-xs text-subtle font-semibold uppercase tracking-wide mb-1">Vence</p>
+              <p class="text-xs text-subtle font-semibold uppercase tracking-wide mb-1 flex items-center gap-1">
+                <CalendarX class="w-3 h-3" aria-hidden="true" />
+                Vence
+              </p>
               <p class="text-sm font-bold text-default">{{ formatDate(subscription.expired_at) }}</p>
             </div>
             <div class="bg-[var(--color-surface-soft)] rounded-xl p-4 border border-default-soft">
-              <p class="text-xs text-subtle font-semibold uppercase tracking-wide mb-1">Días restantes</p>
+              <p class="text-xs text-subtle font-semibold uppercase tracking-wide mb-1 flex items-center gap-1">
+                <Clock class="w-3 h-3" aria-hidden="true" />
+                Días restantes
+              </p>
               <p class="text-sm font-bold" :class="daysLeft <= 5 ? 'text-red-600' : 'text-emerald-600'">
                 {{ daysLeft >= 0 ? daysLeft : 0 }} días
               </p>
@@ -60,8 +76,9 @@
               <span
                 v-for="feature in subscription.plan?.features"
                 :key="feature.id"
-                class="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold"
+                class="px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold inline-flex items-center gap-1"
               >
+                <Check class="w-3 h-3" aria-hidden="true" />
                 {{ featureLabel(feature) }}
               </span>
             </div>
@@ -69,15 +86,17 @@
 
           <!-- Acciones -->
           <div class="flex flex-col sm:flex-row gap-3 mt-6 pt-4 border-t">
-            <button @click="showPlans = true" class="btn btn-primary flex-1">
-              Cambiar plan
+            <button @click="showPlans = true" class="btn btn-primary flex-1 inline-flex items-center justify-center gap-2">
+              <RefreshCw class="w-4 h-4" aria-hidden="true" />
+              <span>Cambiar plan</span>
             </button>
             <button
               v-if="!subscription.canceled_at"
               @click="confirmCancel"
-              class="btn flex-1 border border-red-300 text-red-600 hover:bg-red-50 bg-[var(--color-surface)]"
+              class="btn flex-1 border border-red-300 text-red-600 hover:bg-red-50 bg-[var(--color-surface)] inline-flex items-center justify-center gap-2"
             >
-              Cancelar suscripción
+              <X class="w-4 h-4" aria-hidden="true" />
+              <span>Cancelar suscripción</span>
             </button>
             <div v-else class="flex-1 text-center text-sm text-subtle self-center">
               Cancelada — acceso hasta vencimiento
@@ -112,9 +131,10 @@
                 <li
                   v-for="feature in plan.features"
                   :key="feature.id"
-                  class="text-xs text-muted"
+                  class="text-xs text-muted flex items-start gap-1.5"
                 >
-                  {{ featureLabel(feature) }}
+                  <Check class="w-3 h-3 mt-0.5 text-emerald-500 flex-shrink-0" aria-hidden="true" />
+                  <span>{{ featureLabel(feature) }}</span>
                 </li>
               </ul>
 
@@ -122,11 +142,15 @@
                 v-if="subscription?.plan?.id !== plan.id"
                 @click="selectPlan(plan)"
                 :disabled="saving"
-                class="btn btn-primary text-sm py-2"
+                class="btn btn-primary text-sm py-2 inline-flex items-center justify-center gap-2"
               >
-                {{ subscription ? 'Cambiar a este' : 'Suscribirme' }}
+                <Package class="w-4 h-4" aria-hidden="true" />
+                <span>{{ subscription ? 'Cambiar a este' : 'Suscribirme' }}</span>
               </button>
-              <div v-else class="text-center text-xs font-bold text-blue-600 py-2">Plan actual</div>
+              <div v-else class="text-center text-xs font-bold text-blue-600 py-2 flex items-center justify-center gap-1">
+                <CheckCircle2 class="w-4 h-4" aria-hidden="true" />
+                Plan actual
+              </div>
             </div>
           </div>
 
@@ -146,6 +170,19 @@ import api from '@/axios'
 import Swal from 'sweetalert2'
 import dayjs from 'dayjs'
 import { SWAL_COLORS } from '@/lib/colors'
+import {
+  Home,
+  Loader2,
+  AlertCircle,
+  Calendar,
+  CalendarX,
+  Clock,
+  Check,
+  CheckCircle2,
+  RefreshCw,
+  X,
+  Package,
+} from 'lucide-vue-next'
 
 const loading  = ref(true)
 const saving   = ref(false)

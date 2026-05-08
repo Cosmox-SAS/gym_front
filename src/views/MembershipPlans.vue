@@ -2,10 +2,12 @@
   <div class="page-layout">
     <BaseCard title="Planes de Membresía" subtitle="Gestiona los planes disponibles" class="space-y-6">
       <template #actions>
-        <router-link to="/Menu" class="btn btn-secondary flex-1 sm:flex-none">
-          Inicio
+        <router-link to="/Menu" class="btn btn-secondary flex-1 sm:flex-none inline-flex items-center justify-center gap-2">
+          <Home class="w-4 h-4" aria-hidden="true" />
+          <span>Inicio</span>
         </router-link>
         <BaseButton variant="success" class="flex-1 sm:flex-none" @click="openModal = true">
+          <Plus class="w-4 h-4" aria-hidden="true" />
           Nuevo plan
         </BaseButton>
       </template>
@@ -32,9 +34,11 @@
               <td>
                 <div class="flex justify-center gap-2">
                   <BaseButton variant="indigo" size="sm" @click="editarPlan(plan)">
+                    <Pencil class="w-3.5 h-3.5" aria-hidden="true" />
                     Editar
                   </BaseButton>
                   <BaseButton variant="danger" size="sm" @click="eliminarPlan(plan.id)">
+                    <Trash2 class="w-3.5 h-3.5" aria-hidden="true" />
                     Eliminar
                   </BaseButton>
                 </div>
@@ -56,6 +60,7 @@
             :disabled="currentPagePlanes === 1"
             @click="currentPagePlanes--"
           >
+            <ChevronLeft class="w-4 h-4" aria-hidden="true" />
             Anterior
           </BaseButton>
           <BaseButton
@@ -65,6 +70,7 @@
             @click="currentPagePlanes++"
           >
             Siguiente
+            <ChevronRight class="w-4 h-4" aria-hidden="true" />
           </BaseButton>
         </div>
       </div>
@@ -99,8 +105,12 @@
       </form>
 
       <template #footer>
-        <BaseButton variant="secondary" @click="openModal = false">Cancelar</BaseButton>
+        <BaseButton variant="secondary" @click="openModal = false">
+          <X class="w-4 h-4" aria-hidden="true" />
+          Cancelar
+        </BaseButton>
         <BaseButton variant="primary" type="submit" form="create-plan-form">
+          <Check class="w-4 h-4" aria-hidden="true" />
           Guardar
         </BaseButton>
       </template>
@@ -135,8 +145,12 @@
       </form>
 
       <template #footer>
-        <BaseButton variant="secondary" @click="cerrarModalEdicion">Cancelar</BaseButton>
+        <BaseButton variant="secondary" @click="cerrarModalEdicion">
+          <X class="w-4 h-4" aria-hidden="true" />
+          Cancelar
+        </BaseButton>
         <BaseButton variant="primary" type="submit" form="edit-plan-form">
+          <Check class="w-4 h-4" aria-hidden="true" />
           Actualizar
         </BaseButton>
       </template>
@@ -150,6 +164,16 @@ import api from "@/axios";
 import Swal from "sweetalert2";
 import { BaseButton, BaseInput, BaseSelect, BaseCard, BaseBadge, BaseModal } from "@/components/ui";
 import { SWAL_COLORS } from "@/lib/colors";
+import {
+  Home,
+  Plus,
+  Pencil,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Check,
+} from "lucide-vue-next";
 
 // Opciones compartidas para los selects de frecuencia.
 const FREQUENCY_OPTIONS = [

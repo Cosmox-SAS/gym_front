@@ -3,7 +3,10 @@
 
     <!-- Logo / Nombre -->
     <div class="mb-10 text-center">
-      <h1 class="text-3xl font-bold text-white tracking-wide">Control de Acceso</h1>
+      <h1 class="text-3xl font-bold text-white tracking-wide flex items-center justify-center gap-2">
+        <DoorOpen class="w-8 h-8" aria-hidden="true" />
+        Control de Acceso
+      </h1>
       <p class="text-subtle mt-1 text-sm">Coloca tu dedo en el lector para ingresar</p>
     </div>
 
@@ -14,7 +17,9 @@
       <div
         class="w-28 h-28 rounded-full flex items-center justify-center transition-all duration-500"
         :class="iconClass"
-      ></div>
+      >
+        <component :is="stateIcon" class="w-14 h-14" aria-hidden="true" />
+      </div>
 
       <!-- Mensaje de estado -->
       <p class="text-center text-lg font-medium" :class="textClass">
@@ -40,15 +45,16 @@
       <button
         v-if="!scanning && state !== 'expired'"
         @click="manualRetry"
-        class="w-full mt-2 py-3 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+        class="w-full mt-2 py-3 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors inline-flex items-center justify-center gap-2"
       >
-        {{ state === 'idle' && !member ? 'Escanear huella' : 'Escanear de nuevo' }}
+        <Fingerprint class="w-4 h-4" aria-hidden="true" />
+        <span>{{ state === 'idle' && !member ? 'Escanear huella' : 'Escanear de nuevo' }}</span>
       </button>
     </div>
 
     <!-- Indicador de conexión con el bridge -->
     <p class="mt-6 text-xs flex items-center gap-1.5" :class="connected ? 'text-green-400' : 'text-red-400'">
-      <span class="w-2 h-2 rounded-full" :class="connected ? 'bg-green-400' : 'bg-red-400'"></span>
+      <component :is="connected ? Wifi : WifiOff" class="w-3 h-3" aria-hidden="true" />
       {{ connected ? 'Lector conectado' : 'Lector desconectado' }}
     </p>
   </div>
@@ -58,6 +64,15 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useFingerprint } from '@/composables/useFingerprint'
+import {
+  DoorOpen,
+  Fingerprint,
+  Check,
+  X,
+  AlertTriangle,
+  Wifi,
+  WifiOff,
+} from 'lucide-vue-next'
 
 const route  = useRoute()
 const router = useRouter()
@@ -104,6 +119,13 @@ const textClass = computed(() => ({
   'text-red-400':   state.value === 'expired' || state.value === 'unknown',
   'text-subtle':  state.value === 'idle',
 }))
+
+const stateIcon = computed(() => {
+  if (state.value === 'success')  return Check
+  if (state.value === 'expired')  return AlertTriangle
+  if (state.value === 'unknown')  return X
+  return Fingerprint
+})
 
 const displayMessage = computed(() => {
   if (state.value === 'scanning') return statusMsg.value || 'Leyendo huella...'

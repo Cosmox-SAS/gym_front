@@ -9,12 +9,7 @@
               class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
               style="background: rgba(99,102,241,0.12); color: #818cf8;"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <line x1="19" y1="8" x2="19" y2="14" />
-                <line x1="22" y1="11" x2="16" y2="11" />
-              </svg>
+              <UserPlus class="w-5 h-5" aria-hidden="true" />
             </div>
             <div>
               <h1 class="text-xl font-bold text-default tracking-tight leading-tight">
@@ -31,9 +26,7 @@
             aria-label="Cerrar"
             @click="$emit('close')"
           >
-            <svg class="w-5 h-5 text-muted" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X class="w-5 h-5 text-muted" aria-hidden="true" />
           </button>
         </div>
 
@@ -167,9 +160,7 @@
                   v-if="capturedTemplate"
                   class="mt-3 flex items-center gap-1.5 text-xs font-semibold text-success-700"
                 >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
+                  <Check class="w-4 h-4" aria-hidden="true" />
                   Huella capturada — se guardará al registrar
                 </p>
               </div>
@@ -215,6 +206,7 @@
             :loading="loading"
             :disabled="loading"
           >
+            <Save class="w-4 h-4 mr-2 inline" aria-hidden="true" />
             Guardar Cliente
           </BaseButton>
         </div>
@@ -227,6 +219,7 @@
 import { ref, reactive, computed } from "vue";
 import api from "@/axios";
 import Swal from "sweetalert2";
+import { Check, UserPlus, X, Save } from 'lucide-vue-next'
 import FingerprintEnroll from "@/components/FingerprintEnroll.vue";
 import ProgressPhotoCapture from "@/components/members/ProgressPhotoCapture.vue";
 import { BaseInput, BaseSelect, BaseButton } from "@/components/ui";

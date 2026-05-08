@@ -3,10 +3,14 @@
     <div class="max-w-7xl mx-auto space-y-6">
       <BaseCard title="Estadísticas" subtitle="Reportes y análisis del gimnasio">
         <template #actions>
-          <router-link to="/Menu" class="btn btn-dark">Inicio</router-link>
+          <router-link to="/Menu" class="btn btn-dark inline-flex items-center justify-center gap-2">
+            <Home class="w-4 h-4" aria-hidden="true" />
+            <span>Inicio</span>
+          </router-link>
         </template>
 
-        <p v-if="loading" class="text-center py-16 text-xl text-subtle animate-pulse">
+        <p v-if="loading" class="text-center py-16 text-xl text-subtle animate-pulse flex items-center justify-center gap-2">
+          <Loader2 class="w-6 h-6 animate-spin" aria-hidden="true" />
           Cargando análisis de datos...
         </p>
       </BaseCard>
@@ -15,8 +19,13 @@
         <BaseCard
           v-for="chart in chartCards"
           :key="chart.key"
-          :title="chart.title"
         >
+          <template #header>
+            <h2 class="page-title flex items-center gap-2">
+              <component :is="chart.icon" class="w-5 h-5" aria-hidden="true" />
+              <span>{{ chart.title }}</span>
+            </h2>
+          </template>
           <div
             class="flex-1 relative min-h-[300px]"
             :class="chart.center && 'flex justify-center'"
@@ -55,6 +64,14 @@ import {
 import { Bar, Doughnut } from "vue-chartjs";
 import { CHART_COLORS } from "@/lib/colors";
 import { BaseCard } from "@/components/ui";
+import {
+  Home,
+  Loader2,
+  TrendingUp,
+  PieChart,
+  ShoppingBag,
+  Trophy,
+} from "lucide-vue-next";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
@@ -83,6 +100,7 @@ const chartCards = [
   {
     key: "income",
     title: "Ingresos (Últimos 7 días)",
+    icon: TrendingUp,
     component: Bar,
     data: incomeData,
     options: barOptions,
@@ -91,6 +109,7 @@ const chartCards = [
   {
     key: "pie",
     title: "Distribución de Clientes",
+    icon: PieChart,
     component: Doughnut,
     data: pieData,
     options: pieOptions,
@@ -100,6 +119,7 @@ const chartCards = [
   {
     key: "productSales",
     title: "Ventas Productos (Últimos 7 días)",
+    icon: ShoppingBag,
     component: Bar,
     data: productSalesData,
     options: barOptions,
@@ -108,6 +128,7 @@ const chartCards = [
   {
     key: "topProducts",
     title: "Top Productos Más Vendidos",
+    icon: Trophy,
     component: Bar,
     data: topProductsData,
     options: barHorizontalOptions,
