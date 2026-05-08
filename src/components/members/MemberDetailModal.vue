@@ -168,12 +168,61 @@
                       <dd class="info-val capitalize">{{ member.sexo || "—" }}</dd>
                     </div>
                   </dl>
+
+                  <!-- ===== Tarjeta de membresía (horizontal) ===== -->
+                  <div class="mt-6 pt-5 border-t border-default-soft">
+                    <div class="section-header">
+                      <span class="section-bar bg-indigo-500" />
+                      <h2 class="section-title" style="color: var(--color-text-muted);">Membresía</h2>
+                    </div>
+
+                    <div v-if="member.memberships?.length" class="membership-row">
+                      <div class="membership-cell membership-cell--plan">
+                        <p class="info-label !mb-1">Plan Actual</p>
+                        <p class="text-base font-bold capitalize" style="color: var(--color-text);">
+                          {{ traducirFrecuencia(member.memberships[0].plan?.frequency) }}
+                        </p>
+                        <p class="text-lg font-black mt-0.5" style="color: #60a5fa;">
+                          {{ formatPrice(member.memberships[0].plan?.price) }}
+                        </p>
+                      </div>
+                      <div class="membership-cell">
+                        <p class="info-label !mb-1">Estado</p>
+                        <BaseBadge :color="statusColor(member.memberships[0].status)">
+                          {{ traducirEstado(member.memberships[0].status) }}
+                        </BaseBadge>
+                      </div>
+                      <div class="membership-cell">
+                        <p class="info-label !mb-1">Inicio</p>
+                        <p class="info-val">{{ member.memberships[0].start_date }}</p>
+                      </div>
+                      <div class="membership-cell">
+                        <p class="info-label !mb-1">Fin</p>
+                        <p class="info-val">{{ member.memberships[0].end_date }}</p>
+                      </div>
+                      <div v-if="diasRestantes !== null" class="membership-cell">
+                        <p class="info-label !mb-1">Días restantes</p>
+                        <p class="font-bold text-sm" :class="diasRestantesCls">
+                          {{ diasRestantes < 0 ? `Vencida hace ${Math.abs(diasRestantes)}d` : `${diasRestantes} días` }}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div v-else class="flex items-center gap-3 bg-[var(--color-surface-soft)] border border-default-soft rounded-xl p-4">
+                      <div class="w-10 h-10 rounded-full bg-[var(--color-overlay)] flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5 text-subtle" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                        </svg>
+                      </div>
+                      <p class="text-sm text-muted">Sin membresía asignada</p>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="detail-card">
                   <div class="section-header">
-                    <span class="section-bar bg-danger-500" />
-                    <h2 class="section-title" style="color: var(--color-text-muted);">Antecedentes Médicos</h2>
+                    <span class="section-bar bg-amber-500" />
+                    <h2 class="section-title" style="color: var(--color-text-muted);">Objetivos / Observaciones</h2>
                   </div>
                   <div
                     v-if="member.medical_history"
@@ -182,57 +231,45 @@
                     {{ member.medical_history }}
                   </div>
                   <p v-else class="text-sm italic text-subtle">
-                    No hay antecedentes médicos registrados.
+                    Sin objetivos / observaciones registrados.
                   </p>
                 </div>
+
               </div>
 
+              <!-- ===== Fotos Iniciales (frente, perfil, espalda) ===== -->
               <div class="space-y-5">
-                <div v-if="member.memberships?.length" class="detail-card">
+                <div class="detail-card">
                   <div class="section-header">
-                    <span class="section-bar bg-primary-600" />
-                    <h2 class="section-title" style="color: var(--color-text-muted);">Membresía</h2>
+                    <span class="section-bar bg-success-600" />
+                    <h2 class="section-title" style="color: var(--color-text-muted);">Fotos Iniciales</h2>
                   </div>
-                  <div class="membership-plan-card">
-                    <p class="text-[10px] font-semibold uppercase tracking-widest mb-1" style="color: var(--color-text-subtle);">
-                      Plan Actual
-                    </p>
-                    <p class="text-lg font-bold capitalize" style="color: var(--color-text);">
-                      {{ traducirFrecuencia(member.memberships[0].plan?.frequency) }}
-                    </p>
-                    <p class="text-2xl font-black mt-1" style="color: #60a5fa;">
-                      {{ formatPrice(member.memberships[0].plan?.price) }}
-                    </p>
-                  </div>
-                  <div class="text-sm divide-y" style="--tw-divide-opacity:1; border-color: var(--color-border);">
-                    <div class="flex items-center justify-between py-2.5">
-                      <span class="info-label !mb-0">Estado</span>
-                      <BaseBadge :color="statusColor(member.memberships[0].status)">
-                        {{ traducirEstado(member.memberships[0].status) }}
-                      </BaseBadge>
-                    </div>
-                    <div class="flex items-center justify-between py-2.5">
-                      <span class="info-label !mb-0">Inicio</span>
-                      <span class="info-val">{{ member.memberships[0].start_date }}</span>
-                    </div>
-                    <div class="flex items-center justify-between py-2.5">
-                      <span class="info-label !mb-0">Fin</span>
-                      <span class="info-val">{{ member.memberships[0].end_date }}</span>
-                    </div>
-                    <div v-if="diasRestantes !== null" class="flex items-center justify-between py-2.5">
-                      <span class="info-label !mb-0">Días restantes</span>
-                      <span class="font-bold text-sm" :class="diasRestantesCls">
-                        {{ diasRestantes < 0 ? `Vencida hace ${Math.abs(diasRestantes)}d` : `${diasRestantes} días` }}
+
+                  <div class="space-y-3">
+                    <div
+                      v-for="(label, i) in initialPhotoLabels"
+                      :key="i"
+                      class="progress-photo-slot"
+                    >
+                      <img
+                        v-if="initialPhotos[i]?.photo"
+                        :src="initialPhotos[i].photo"
+                        :alt="`Foto inicial ${label}`"
+                        class="progress-photo-img"
+                      />
+                      <div v-else class="progress-photo-empty">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span class="text-[11px] font-bold uppercase tracking-wider mt-1.5">{{ label }}</span>
+                        <span class="text-[10px] text-subtle mt-0.5">Sin foto</span>
+                      </div>
+                      <span class="progress-photo-tag">{{ label }}</span>
+                      <span v-if="initialPhotos[i]?.taken_at" class="progress-photo-date">
+                        {{ formatDate(initialPhotos[i].taken_at) }}
                       </span>
                     </div>
                   </div>
-                </div>
-
-                <div v-else class="detail-card text-center">
-                  <div class="w-12 h-12 rounded-full bg-[var(--color-overlay)] flex items-center justify-center mx-auto mb-3">
-                    <CalendarX2 class="w-6 h-6 text-muted" aria-hidden="true" />
-                  </div>
-                  <p class="text-sm text-muted">Sin membresía asignada</p>
                 </div>
               </div>
             </div>
@@ -322,6 +359,30 @@ const diasRestantes = computed(() => {
   if (!end) return null;
   return dayjs(end).diff(dayjs(), "day");
 });
+
+const initialPhotoLabels = ["Frente", "Perfil", "Espalda"];
+
+function normalizePhotoEntry(value) {
+  if (!value) return null;
+  if (typeof value === "string") return { photo: value, taken_at: null };
+  if (typeof value === "object" && value.photo) {
+    return { photo: value.photo, taken_at: value.taken_at || null };
+  }
+  return null;
+}
+
+const initialPhotos = computed(() => {
+  const raw = member.value?.initial_photos;
+  if (!Array.isArray(raw)) return [null, null, null];
+  return [normalizePhotoEntry(raw[0]), normalizePhotoEntry(raw[1]), normalizePhotoEntry(raw[2])];
+});
+
+function formatDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" });
+}
 
 const diasRestantesCls = computed(() => {
   if (diasRestantes.value === null) return "";
@@ -413,7 +474,7 @@ function traducirEstado(estado) {
 .detail-panel {
   position: relative;
   width: 100%;
-  max-width: 72rem;
+  max-width: 90em;
   max-height: calc(100vh - 2rem);
   display: flex;
   flex-direction: column;
@@ -503,6 +564,98 @@ function traducirEstado(estado) {
 :global(.dark) .membership-plan-card {
   background: rgba(99, 102, 241, 0.10);
   border-color: rgba(99, 102, 241, 0.25);
+}
+
+/* ===== Fila horizontal de membresía ===== */
+.membership-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 0.75rem;
+  padding: 1rem 1.125rem;
+}
+@media (min-width: 640px) {
+  .membership-row { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+:global(.dark) .membership-row {
+  background: rgba(99, 102, 241, 0.10);
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
+.membership-cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-width: 0;
+}
+.membership-cell--plan {
+  grid-column: span 2 / span 2;
+}
+@media (min-width: 640px) {
+  .membership-cell--plan { grid-column: span 1 / span 1; }
+}
+
+/* ===== Fotos de progreso ===== */
+.progress-photo-slot {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: var(--color-surface-soft);
+  border: 1px dashed var(--color-border-strong);
+}
+:global(.dark) .progress-photo-slot {
+  background: var(--color-overlay);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.progress-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.progress-photo-empty {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-subtle);
+}
+
+.progress-photo-tag {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: white;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  backdrop-filter: blur(4px);
+}
+
+.progress-photo-date {
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  right: 0.5rem;
+  text-align: center;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: white;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 0.2rem 0.4rem;
+  border-radius: 9999px;
+  backdrop-filter: blur(4px);
 }
 
 .info-label {

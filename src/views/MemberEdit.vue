@@ -29,13 +29,13 @@
       <div class="flex-1 overflow-y-auto px-6 sm:px-8 py-7">
         <form id="edit-form" class="space-y-8" @submit.prevent="updateMember">
           <!-- ===== Información personal ===== -->
-          <section>
-            <div class="section-header">
+          <div>
+            <div class="section-header" style="margin-bottom: 0.5rem;">
               <span class="section-bar bg-primary-600" />
               <h2 class="section-title text-primary-700">Información Personal</h2>
             </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <section class="p-5 sm:p-6 bg-[var(--color-surface-soft)] rounded-xl border border-default-soft">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               <BaseInput
                 v-model="form.name"
                 label="Nombre Completo"
@@ -79,14 +79,14 @@
               />
             </div>
           </section>
+          </div>
 
           <!-- ===== Biometría ===== -->
-          <section class="p-5 sm:p-6 bg-[var(--color-surface-soft)] rounded-xl border border-default-soft">
-            <div class="section-header">
-              <span class="section-bar bg-success-600" />
-              <h2 class="section-title text-success-700">Biometría</h2>
-            </div>
-
+          <div class="section-header">
+            <span class="section-bar bg-success-600" />
+            <h2 class="section-title text-success-700">Biometría</h2>
+          </div>
+          <section class="p-5 sm:p-6 bg-[var(--color-surface-soft)] rounded-xl border border-default-soft -mt-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
               <BaseInput
                 v-model.number="form.estatura"
@@ -118,18 +118,18 @@
             </div>
           </section>
 
-          <!-- ===== Antecedentes médicos ===== -->
+          <!-- ===== Objetivos / Observaciones ===== -->
           <section>
             <div class="section-header">
-              <span class="section-bar bg-danger-500" />
-              <h2 class="section-title text-danger-600">Antecedentes Médicos</h2>
+              <span class="section-bar bg-amber-500" />
+              <h2 class="section-title" style="color: var(--color-text-muted);">Objetivos / Observaciones</h2>
               <span class="ml-auto optional-tag">Opcional</span>
             </div>
             <textarea
               v-model="form.medical_history"
               rows="3"
               class="field-input resize-none"
-              placeholder="Detalle alergias, lesiones previas o condiciones crónicas relevantes..."
+              placeholder="Ej. perder peso, ganar masa muscular, condiciones a tener en cuenta..."
             />
             <p v-if="errors.medical_history" class="text-xs text-red-600 mt-1">
               {{ errors.medical_history }}
@@ -152,6 +152,25 @@
             </div>
           </section>
 
+          <!-- ===== Fotos Iniciales (frente, perfil, espalda) ===== -->
+          <section class="pt-6 border-t border-default-soft">
+            <div class="section-header">
+              <span class="section-bar bg-success-600" />
+              <h2 class="section-title text-success-700">Fotos Iniciales</h2>
+              <span class="ml-auto optional-tag">Opcional</span>
+            </div>
+            <div class="rounded-xl border-2 border-dashed border-default-soft bg-[var(--color-surface-soft)] p-4">
+              <ProgressPhotoCapture
+                v-model="initialPhotos"
+                :labels="['Frente', 'Perfil', 'Espalda']"
+                :member-id="Number(memberId)"
+              />
+              <p class="mt-3 text-xs text-muted">
+              Solo PNG/JPG/JPEG hasta 3MB.
+              </p>
+            </div>
+          </section>
+
           <div
             v-if="errorMessage"
             class="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700"
@@ -163,15 +182,17 @@
 
       <!-- Footer -->
       <div class="px-6 sm:px-8 py-5 border-t border-default-soft bg-[var(--color-surface-soft)] flex items-center justify-end gap-3">
-        <BaseButton variant="secondary" @click="router.push({ name: 'Members' })">
-          <X class="w-4 h-4 mr-2 inline" aria-hidden="true" />
+        <BaseButton
+          variant="secondary"
+          class="border-2 border-[var(--color-border-strong)]"
+          @click="router.push({ name: 'Members' })"
+        >
           Cancelar
         </BaseButton>
         <BaseButton
           type="submit"
           form="edit-form"
           variant="primary"
-          size="lg"
           :loading="loading"
           :disabled="loading"
         >
@@ -191,6 +212,7 @@ import { User, X, Save } from 'lucide-vue-next'
 import api from "@/axios";
 import Swal from "sweetalert2";
 import FingerprintEnroll from "@/components/FingerprintEnroll.vue";
+import ProgressPhotoCapture from "@/components/members/ProgressPhotoCapture.vue";
 import { BaseInput, BaseSelect, BaseButton } from "@/components/ui";
 import { SWAL_COLORS } from "@/lib/colors";
 
@@ -221,6 +243,7 @@ const errors = ref({});
 const errorMessage = ref("");
 const loading = ref(false);
 const memberHasFingerprint = ref(false);
+const initialPhotos = ref([null, null, null]);
 
 const fetchMember = async () => {
   try {
@@ -237,6 +260,8 @@ const fetchMember = async () => {
       medical_history: data.medical_history ?? "",
     });
     memberHasFingerprint.value = !!data.fingerprint_data;
+    const initials = Array.isArray(data.initial_photos) ? data.initial_photos : [];
+    initialPhotos.value = [initials[0] || null, initials[1] || null, initials[2] || null];
   } catch {
     Swal.fire({
       icon: "error",
@@ -253,7 +278,10 @@ const updateMember = async () => {
   errors.value = {};
 
   try {
-    await api.put(`/members/${memberId}`, form);
+    await api.put(`/members/${memberId}`, {
+      ...form,
+      initial_photos: initialPhotos.value,
+    });
 
     await Swal.fire({
       icon: "success",
@@ -342,4 +370,5 @@ onMounted(fetchMember);
   letter-spacing: 0.15em;
   color: var(--color-text-subtle);
 }
+
 </style>
