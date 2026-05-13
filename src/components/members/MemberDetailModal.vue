@@ -167,7 +167,7 @@
                     </div>
                     <div class="info-item">
                       <dt class="info-label">Fecha de nacimiento</dt>
-                      <dd class="info-val">{{ member.birth_date || "—" }}</dd>
+                      <dd class="info-val">{{ formatAppDate(member.birth_date) }}</dd>
                     </div>
                     <div class="info-item">
                       <dt class="info-label">Sexo</dt>
@@ -244,6 +244,7 @@ import api from "@/axios";
 import dayjs from "dayjs";
 import Swal from "sweetalert2";
 import { BaseBadge } from "@/components/ui";
+import { formatAppDate } from "@/lib/dates";
 import {
   Activity,
   Cake,
@@ -333,10 +334,7 @@ const primaryPhoto = computed(() => {
 });
 
 function formatDate(iso) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" });
+  return formatAppDate(iso, "");
 }
 
 const imcIconCls = computed(() => {

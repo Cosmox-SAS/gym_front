@@ -154,11 +154,11 @@
                 <div class="grid grid-cols-3 gap-2">
                   <div>
                     <span class="member-info-label">Inicio</span>
-                    <span class="text-[12px] font-semibold text-default block mt-0.5">{{ member.memberships[0].start_date || "—" }}</span>
+                    <span class="text-[12px] font-semibold text-default block mt-0.5">{{ formatAppDate(member.memberships[0].start_date) }}</span>
                   </div>
                   <div>
                     <span class="member-info-label">Fin</span>
-                    <span class="text-[12px] font-semibold text-default block mt-0.5">{{ member.memberships[0].end_date || "—" }}</span>
+                    <span class="text-[12px] font-semibold text-default block mt-0.5">{{ formatAppDate(member.memberships[0].end_date) }}</span>
                   </div>
                   <div>
                     <span class="member-info-label">Restantes</span>
@@ -280,6 +280,7 @@ import api from "@/axios";
 import dayjs from "dayjs";
 import Sidebar from "@/views/Sidebar.vue";
 import Swal from "sweetalert2";
+import { formatAppDate } from "@/lib/dates";
 import {
   Home,
   UserPlus,

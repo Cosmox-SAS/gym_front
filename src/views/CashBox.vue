@@ -26,7 +26,7 @@
         >
           <h3 class="text-sm font-semibold mb-3 uppercase tracking-wide flex items-center gap-2" style="color: var(--color-text-muted);">
             <Calendar class="w-4 h-4" aria-hidden="true" />
-            Resumen Hoy ({{ todayCashbox.date }})
+            Resumen Hoy ({{ formatAppDate(todayCashbox.date) }})
           </h3>
 
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
@@ -108,7 +108,7 @@
               </thead>
               <tbody class="bg-[var(--color-surface)]">
                 <tr v-for="cb in cashboxes" :key="cb.id" class="table-row">
-                  <td class="font-medium">{{ cb.date }}</td>
+                  <td class="font-medium">{{ formatAppDate(cb.date) }}</td>
                   <td class="text-right">{{ formatCurrency(cb.opening_balance) }}</td>
                   <td class="text-right text-emerald-600">
                     {{ formatCurrency(cb.total_income) }}
@@ -172,6 +172,7 @@ import Swal from "sweetalert2";
 import { useRouter } from "vue-router";
 import { BaseButton, BaseInput, BaseCard, BaseModal } from "@/components/ui";
 import { SWAL_COLORS } from "@/lib/colors";
+import { formatAppDate } from "@/lib/dates";
 import {
   Home,
   Lock,

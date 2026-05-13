@@ -149,7 +149,7 @@
                 </div>
                 <div>
                   <dt class="info-label">Fecha de nacimiento</dt>
-                  <dd class="info-val">{{ member.birth_date || "—" }}</dd>
+                  <dd class="info-val">{{ formatAppDate(member.birth_date) }}</dd>
                 </div>
                 <div>
                   <dt class="info-label">Sexo</dt>
@@ -202,11 +202,11 @@
                 </div>
                 <div class="flex items-center justify-between">
                   <span class="info-label">Inicio</span>
-                  <span class="info-val">{{ member.memberships[0].start_date }}</span>
+                  <span class="info-val">{{ formatAppDate(member.memberships[0].start_date) }}</span>
                 </div>
                 <div class="flex items-center justify-between">
                   <span class="info-label">Fin</span>
-                  <span class="info-val">{{ member.memberships[0].end_date }}</span>
+                  <span class="info-val">{{ formatAppDate(member.memberships[0].end_date) }}</span>
                 </div>
                 <div v-if="diasRestantes !== null" class="flex items-center justify-between">
                   <span class="info-label">Días restantes</span>
@@ -236,6 +236,7 @@ import { useRoute } from "vue-router";
 import api from "@/axios";
 import dayjs from "dayjs";
 import Swal from "sweetalert2";
+import { formatAppDate } from "@/lib/dates";
 import {
   Activity,
   ArrowLeft,

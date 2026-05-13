@@ -208,6 +208,7 @@ import { ref, computed, onMounted } from "vue";
 import api from "@/axios";
 import dayjs from "dayjs";
 import Swal from "sweetalert2";
+import { formatAppDateTime } from "@/lib/dates";
 import {
   Home,
   Plus,
@@ -477,7 +478,7 @@ const formatCurrency = (val) =>
     currency: "COP",
     maximumFractionDigits: 0,
   }).format(val);
-const formatDate = (dateStr) => new Date(dateStr).toLocaleString("es-CO");
+const formatDate = (dateStr) => formatAppDateTime(dateStr);
 
 onMounted(() => {
   cargarHistorial();

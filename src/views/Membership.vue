@@ -290,6 +290,7 @@ import { useRoute } from "vue-router";
 import api from "@/axios";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import { formatAppDate } from "@/lib/dates";
 
 dayjs.extend(utc);
 import Swal from "sweetalert2";
@@ -503,7 +504,7 @@ const guardarCambios = async () => {
 };
 
 // Utilidades
-const formatDate = (d) => dayjs(d).format("DD/MM/YY");
+const formatDate = (d) => formatAppDate(d);
 const formatCurrency = (v) =>
   new Intl.NumberFormat("es-CO", {
     style: "currency",

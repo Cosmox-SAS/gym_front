@@ -138,6 +138,7 @@
 
 <script setup>
 import { ref, computed, nextTick, onBeforeUnmount } from "vue";
+import { formatAppDate } from "@/lib/dates";
 
 const props = defineProps({
   modelValue: {
@@ -206,14 +207,7 @@ function removePhoto(index) {
 }
 
 function formatDate(iso) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("es-CO", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  return formatAppDate(iso, "");
 }
 
 // ===== File upload =====

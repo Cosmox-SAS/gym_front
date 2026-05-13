@@ -104,6 +104,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/useAuthStore'
 import api from '@/axios'
 import Swal from 'sweetalert2'
+import { formatAppDate } from '@/lib/dates'
 import {
   UserCheck,
   AlertTriangle,
@@ -135,11 +136,7 @@ const greeting = computed(() => {
   return 'Buenas noches'
 })
 
-const today = computed(() =>
-  new Date().toLocaleDateString('es-CO', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-  })
-)
+const today = computed(() => formatAppDate(new Date()))
 
 onMounted(async () => {
   try {

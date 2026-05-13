@@ -108,6 +108,7 @@
 import { ref, computed, onMounted } from 'vue'
 import api from '@/axios'
 import { BaseSelect, BaseInput, BaseButton, BaseCard, BaseBadge } from '@/components/ui'
+import { formatAppDateTime } from '@/lib/dates'
 import {
   ArrowLeft,
   Search,
@@ -167,8 +168,7 @@ function changePage(page: number) {
 }
 
 function formatDate(raw: string) {
-  if (!raw) return '—'
-  return new Date(raw).toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' })
+  return formatAppDateTime(raw)
 }
 
 onMounted(() => fetchLogs())
