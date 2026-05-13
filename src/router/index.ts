@@ -132,8 +132,12 @@ const router = createRouter({
 
     {
       path: "/configuracion",
-      name: "Configuracion",
-      component: () => import("@/views/Configuracion.vue"),
+      redirect: "/configuration",
+    },
+    {
+      path: "/configuration",
+      name: "Configuration",
+      component: () => import("@/views/Configuration.vue"),
       meta: { requiresAuth: true },
     },
     {
