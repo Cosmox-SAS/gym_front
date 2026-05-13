@@ -7,7 +7,7 @@
           class="photo-slot items-center"
         >
           <!-- Etiqueta superior -->
-          <span class="photo-tag">{{ label }}</span>
+          <span class="px-3 py-1 rounded-full bg-gray-800/70 text-white text-[10px] font-bold uppercase tracking-widest shadow-sm">{{ label }}</span>
 
           <div class="photo-frame w-full">
             <img
@@ -38,7 +38,7 @@
 
           <!-- Fecha inferior -->
           <div class="h-6 flex items-center justify-center">
-            <span v-if="photos[i]?.taken_at" class="photo-date">
+            <span v-if="photos[i]?.taken_at" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-800/70 text-white text-[11px] font-semibold shadow-sm">
               <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
@@ -418,34 +418,7 @@ onBeforeUnmount(() => {
   color: var(--color-text-subtle);
 }
 
-.photo-tag {
-  display: inline-flex;
-  font-size: 0.625rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: white;
-  background: rgba(0, 0, 0, 0.7);
-  padding: 0.2rem 0.75rem;
-  border-radius: 9999px;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-}
 
-.photo-date {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: white;
-  background: rgba(0, 0, 0, 0.7);
-  padding: 0.25rem 0.6rem;
-  border-radius: 9999px;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-}
 
 .photo-remove {
   position: absolute;
