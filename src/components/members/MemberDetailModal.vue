@@ -42,16 +42,16 @@
           </div>
 
           <!-- Avatar overlap -->
-          <div class="relative px-6 sm:px-10 -mt-16 pb-5">
+          <div class="relative px-6 sm:px-10 -mt-10 pb-5">
             <div class="flex flex-col sm:flex-row sm:items-end gap-4">
-              <div class="w-24 h-32 rounded-2xl bg-[var(--color-surface)] p-1 shadow-lg shrink-0">
+              <div class="detail-avatar-wrap">
                 <img
                   v-if="primaryPhoto"
                   :src="primaryPhoto"
-                  class="w-full h-full rounded-xl object-cover"
+                  class="detail-avatar-img"
                   :alt="`Foto de ${member?.name}`"
                 />
-                <div v-else class="w-full h-full rounded-xl flex items-center justify-center text-3xl font-black text-white bg-gradient-to-br from-primary-500 to-indigo-600">
+                <div v-else class="detail-avatar-img detail-avatar-fallback">
                   {{ (member?.name || "?").charAt(0).toUpperCase() }}
                 </div>
               </div>
@@ -59,7 +59,7 @@
                 <h1 class="text-xl sm:text-2xl font-bold text-default tracking-tight truncate">
                   {{ member?.name || "—" }}
                 </h1>
-                <div class="flex flex-wrap items-center gap-x-3 gap-y-2 mt-10 divide-chips">
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-2 mt-5 divide-chips">
                   <BaseBadge v-if="member?.memberships?.length" :color="statusColor(member.memberships[0].status)">
                     {{ traducirEstado(member.memberships[0].status) }}
                   </BaseBadge>
@@ -458,6 +458,41 @@ function traducirEstado(estado) {
   border: 1px solid rgba(255,255,255,0.15); transition: all 0.15s; cursor: pointer;
 }
 .btn-icon-white:hover { background: rgba(255,255,255,0.2); }
+
+.detail-avatar-wrap {
+  width: 4.75rem;
+  height: 5rem;
+  border-radius: 0.8rem;
+  overflow: hidden;
+  flex-shrink: 0;
+  padding: 0.25rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: none;
+}
+
+.detail-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 0.6rem;
+  object-fit: cover;
+  display: block;
+}
+
+.detail-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.14);
+  font-size: 1rem;
+  font-weight: 850;
+}
+
+:global(.dark) .detail-avatar-fallback {
+  color: #c7d2fe;
+  background: rgba(99, 102, 241, 0.2);
+}
 
 .meta-chip {
   display: inline-flex; align-items: center; gap: 0.25rem;
