@@ -128,37 +128,44 @@
             </div>
 
             <div class="member-membership-block">
-              <div class="member-membership-title">
-                <span class="member-membership-bar"></span>
-                <span>Membresía</span>
+              <div class="flex items-center gap-2 mb-2.5">
+                <span class="w-1 h-3.5 rounded-full bg-primary-600"></span>
+                <span class="text-[11px] font-bold uppercase tracking-[0.1em] text-muted">Membresía</span>
               </div>
 
-              <div v-if="member.memberships?.length" class="member-membership-grid">
-                <div class="member-membership-cell">
-                  <span class="member-info-label">Tipo de plan</span>
-                  <strong class="member-membership-main">{{ membershipPlanType(member) }}</strong>
-                  <span class="member-membership-frequency">{{ traducirFrecuencia(member.memberships[0].plan?.frequency) }}</span>
-                  <span class="member-membership-price">{{ formatPrice(member.memberships[0].plan?.price) }}</span>
+              <div v-if="member.memberships?.length" class="member-membership-card">
+                <div class="member-membership-divider flex justify-between items-start mb-3 pb-3 border-b">
+                  <div class="min-w-0 pr-2">
+                    <span class="member-info-label">Plan actual</span>
+                    <div class="flex flex-wrap items-center gap-1.5 mt-1">
+                      <strong class="text-[13px] font-black text-default truncate">{{ membershipPlanType(member) }}</strong>
+                      <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-400 shrink-0">{{ traducirFrecuencia(member.memberships[0].plan?.frequency) }}</span>
+                    </div>
+                    <div class="text-primary-600 dark:text-primary-400 font-black text-[13px] mt-0.5">{{ formatPrice(member.memberships[0].plan?.price) }}</div>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <span class="member-info-label mb-1">Estado</span>
+                    <span class="member-membership-status" :class="`membership-status-${membershipStatusColor(member.memberships[0].status)}`">
+                      {{ traducirEstado(member.memberships[0].status) }}
+                    </span>
+                  </div>
                 </div>
-                <div class="member-membership-cell">
-                  <span class="member-info-label">Estado</span>
-                  <span class="member-membership-status" :class="`membership-status-${membershipStatusColor(member.memberships[0].status)}`">
-                    {{ traducirEstado(member.memberships[0].status) }}
-                  </span>
-                </div>
-                <div class="member-membership-cell">
-                  <span class="member-info-label">Inicio</span>
-                  <span class="member-info-value text-left">{{ member.memberships[0].start_date || "—" }}</span>
-                </div>
-                <div class="member-membership-cell">
-                  <span class="member-info-label">Fin</span>
-                  <span class="member-info-value text-left">{{ member.memberships[0].end_date || "—" }}</span>
-                </div>
-                <div class="member-membership-cell">
-                  <span class="member-info-label">Días restantes</span>
-                  <strong class="member-membership-days" :class="membershipDaysClass(member)">
-                    {{ membershipDaysText(member) }}
-                  </strong>
+
+                <div class="grid grid-cols-3 gap-2">
+                  <div>
+                    <span class="member-info-label">Inicio</span>
+                    <span class="text-[12px] font-semibold text-default block mt-0.5">{{ member.memberships[0].start_date || "—" }}</span>
+                  </div>
+                  <div>
+                    <span class="member-info-label">Fin</span>
+                    <span class="text-[12px] font-semibold text-default block mt-0.5">{{ member.memberships[0].end_date || "—" }}</span>
+                  </div>
+                  <div>
+                    <span class="member-info-label">Restantes</span>
+                    <strong class="text-[12px] block mt-0.5" :class="membershipDaysClass(member)">
+                      {{ membershipDaysText(member) }}
+                    </strong>
+                  </div>
                 </div>
               </div>
 
@@ -592,9 +599,12 @@ function membershipDaysClass(member) {
 }
 
 .member-info-list {
-  border: 1px solid var(--color-border);
+  border: 1px solid #cbd5e1; /* slate-300 */
   border-radius: 0.75rem;
   background: var(--color-surface);
+}
+:global(.dark) .member-info-list {
+  border-color: #475569; /* slate-600 */
 }
 
 .member-info-row {
@@ -603,7 +613,10 @@ function membershipDaysClass(member) {
   align-items: center;
   gap: 0.65rem;
   padding: 0.55rem 0.7rem;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid #cbd5e1;
+}
+:global(.dark) .member-info-row {
+  border-bottom-color: #475569;
 }
 .member-info-row:last-child {
   border-bottom: none;
@@ -629,59 +642,22 @@ function membershipDaysClass(member) {
   margin-top: 0.75rem;
 }
 
-.member-membership-title {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  margin-bottom: 0.5rem;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-}
-
-.member-membership-bar {
-  width: 0.18rem;
-  height: 1rem;
-  border-radius: 9999px;
-  background: #6366f1;
-}
-
-.member-membership-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-  border: 1px solid rgba(99, 102, 241, 0.18);
+.member-membership-card {
+  border: 1px solid #cbd5e1; /* slate-300 */
   border-radius: 0.75rem;
-  padding: 0.75rem;
-  background: rgba(99, 102, 241, 0.06);
+  padding: 0.85rem;
+  background: var(--color-surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+:global(.dark) .member-membership-card {
+  border-color: #475569; /* slate-600 */
 }
 
-.member-membership-cell {
-  min-width: 0;
+.member-membership-divider {
+  border-bottom-color: #cbd5e1;
 }
-
-.member-membership-main {
-  display: block;
-  font-size: 0.8rem;
-  color: var(--color-text);
-}
-
-.member-membership-frequency {
-  display: block;
-  margin-top: 0.18rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--color-text-muted);
-}
-
-.member-membership-price {
-  display: block;
-  margin-top: 0.25rem;
-  font-size: 0.86rem;
-  font-weight: 900;
-  color: #3b82f6;
+:global(.dark) .member-membership-divider {
+  border-bottom-color: #475569;
 }
 
 .member-membership-status {
