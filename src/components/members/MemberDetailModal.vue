@@ -169,54 +169,6 @@
                     </div>
                   </dl>
 
-                  <!-- ===== Tarjeta de membresía (horizontal) ===== -->
-                  <div class="mt-6 pt-5 border-t border-default-soft">
-                    <div class="section-header">
-                      <span class="section-bar bg-indigo-500" />
-                      <h2 class="section-title" style="color: var(--color-text-muted);">Membresía</h2>
-                    </div>
-
-                    <div v-if="member.memberships?.length" class="membership-row">
-                      <div class="membership-cell membership-cell--plan">
-                        <p class="info-label !mb-1">Plan Actual</p>
-                        <p class="text-base font-bold capitalize" style="color: var(--color-text);">
-                          {{ traducirFrecuencia(member.memberships[0].plan?.frequency) }}
-                        </p>
-                        <p class="text-lg font-black mt-0.5" style="color: #60a5fa;">
-                          {{ formatPrice(member.memberships[0].plan?.price) }}
-                        </p>
-                      </div>
-                      <div class="membership-cell">
-                        <p class="info-label !mb-1">Estado</p>
-                        <BaseBadge :color="statusColor(member.memberships[0].status)">
-                          {{ traducirEstado(member.memberships[0].status) }}
-                        </BaseBadge>
-                      </div>
-                      <div class="membership-cell">
-                        <p class="info-label !mb-1">Inicio</p>
-                        <p class="info-val">{{ member.memberships[0].start_date }}</p>
-                      </div>
-                      <div class="membership-cell">
-                        <p class="info-label !mb-1">Fin</p>
-                        <p class="info-val">{{ member.memberships[0].end_date }}</p>
-                      </div>
-                      <div v-if="diasRestantes !== null" class="membership-cell">
-                        <p class="info-label !mb-1">Días restantes</p>
-                        <p class="font-bold text-sm" :class="diasRestantesCls">
-                          {{ diasRestantes < 0 ? `Vencida hace ${Math.abs(diasRestantes)}d` : `${diasRestantes} días` }}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div v-else class="flex items-center gap-3 bg-[var(--color-surface-soft)] border border-default-soft rounded-xl p-4">
-                      <div class="w-10 h-10 rounded-full bg-[var(--color-overlay)] flex items-center justify-center shrink-0">
-                        <svg class="w-5 h-5 text-subtle" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                        </svg>
-                      </div>
-                      <p class="text-sm text-muted">Sin membresía asignada</p>
-                    </div>
-                  </div>
                 </div>
 
                 <div class="detail-card">
@@ -288,7 +240,6 @@ import Swal from "sweetalert2";
 import { BaseBadge } from "@/components/ui";
 import {
   Activity,
-  CalendarX2,
   Cake,
   FileText,
   IdCard,
@@ -354,12 +305,6 @@ const imc = computed(() => {
 
 const clasificacionIMC = computed(() => clasificarIMC(imc.value));
 
-const diasRestantes = computed(() => {
-  const end = member.value?.memberships?.[0]?.end_date;
-  if (!end) return null;
-  return dayjs(end).diff(dayjs(), "day");
-});
-
 const initialPhotoLabels = ["Frente", "Perfil", "Espalda"];
 
 function normalizePhotoEntry(value) {
@@ -384,13 +329,6 @@ function formatDate(iso) {
   return d.toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-const diasRestantesCls = computed(() => {
-  if (diasRestantes.value === null) return "";
-  if (diasRestantes.value < 0) return "text-danger-600";
-  if (diasRestantes.value <= 7) return "text-amber-600";
-  return "text-success-700";
-});
-
 const imcIconCls = computed(() => {
   const cls = clasificacionIMC.value;
   if (cls === "Normal") return "stat-icon-success";
@@ -412,15 +350,6 @@ function formatEstatura(estatura) {
   if (!estatura) return "—";
   const metros = estatura > 3 ? (estatura / 100).toFixed(2) : estatura;
   return `${metros} m`;
-}
-
-function formatPrice(price) {
-  if (price == null) return "—";
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    maximumFractionDigits: 0,
-  }).format(price);
 }
 
 function formatearTelefono(numero) {
@@ -447,11 +376,6 @@ function clasificarIMC(v) {
   if (n < 35) return "Obesidad grado I";
   if (n < 40) return "Obesidad grado II";
   return "Obesidad grado III";
-}
-
-function traducirFrecuencia(f) {
-  const map = { daily: "Diaria", weekly: "Semanal", biweekly: "Quincenal", monthly: "Mensual", quarterly: "Trimestral", yearly: "Anual" };
-  return map[f] || f || "—";
 }
 
 function traducirEstado(estado) {
@@ -552,49 +476,6 @@ function traducirEstado(estado) {
 :global(.dark) .stat-card {
   background: var(--color-surface-muted);
   border-color: rgba(255, 255, 255, 0.10);
-}
-
-.membership-plan-card {
-  border-radius: 0.75rem;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  background: rgba(99, 102, 241, 0.06);
-  border: 1px solid rgba(99, 102, 241, 0.15);
-}
-:global(.dark) .membership-plan-card {
-  background: rgba(99, 102, 241, 0.10);
-  border-color: rgba(99, 102, 241, 0.25);
-}
-
-/* ===== Fila horizontal de membresía ===== */
-.membership-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem 1rem;
-  background: rgba(99, 102, 241, 0.06);
-  border: 1px solid rgba(99, 102, 241, 0.15);
-  border-radius: 0.75rem;
-  padding: 1rem 1.125rem;
-}
-@media (min-width: 640px) {
-  .membership-row { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-}
-:global(.dark) .membership-row {
-  background: rgba(99, 102, 241, 0.10);
-  border-color: rgba(99, 102, 241, 0.25);
-}
-
-.membership-cell {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  min-width: 0;
-}
-.membership-cell--plan {
-  grid-column: span 2 / span 2;
-}
-@media (min-width: 640px) {
-  .membership-cell--plan { grid-column: span 1 / span 1; }
 }
 
 /* ===== Fotos de progreso ===== */

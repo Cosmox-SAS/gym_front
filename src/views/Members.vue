@@ -127,6 +127,45 @@
               </div>
             </div>
 
+            <div class="member-membership-block">
+              <div class="member-membership-title">
+                <span class="member-membership-bar"></span>
+                <span>Membresía</span>
+              </div>
+
+              <div v-if="member.memberships?.length" class="member-membership-grid">
+                <div class="member-membership-cell">
+                  <span class="member-info-label">Plan actual</span>
+                  <strong class="member-membership-main">{{ traducirFrecuencia(member.memberships[0].plan?.frequency) }}</strong>
+                  <span class="member-membership-price">{{ formatPrice(member.memberships[0].plan?.price) }}</span>
+                </div>
+                <div class="member-membership-cell">
+                  <span class="member-info-label">Estado</span>
+                  <span class="member-membership-status" :class="`membership-status-${membershipStatusColor(member.memberships[0].status)}`">
+                    {{ traducirEstado(member.memberships[0].status) }}
+                  </span>
+                </div>
+                <div class="member-membership-cell">
+                  <span class="member-info-label">Inicio</span>
+                  <span class="member-info-value text-left">{{ member.memberships[0].start_date || "—" }}</span>
+                </div>
+                <div class="member-membership-cell">
+                  <span class="member-info-label">Fin</span>
+                  <span class="member-info-value text-left">{{ member.memberships[0].end_date || "—" }}</span>
+                </div>
+                <div class="member-membership-cell">
+                  <span class="member-info-label">Días restantes</span>
+                  <strong class="member-membership-days" :class="membershipDaysClass(member)">
+                    {{ membershipDaysText(member) }}
+                  </strong>
+                </div>
+              </div>
+
+              <div v-else class="member-membership-empty">
+                Sin membresía asignada
+              </div>
+            </div>
+
             <div class="member-notes">
               {{ member.medical_history || "Objetivos / Observaciones" }}
             </div>
@@ -230,6 +269,7 @@
 import { ref, computed, watch, onMounted } from "vue";
 
 import api from "@/axios";
+import dayjs from "dayjs";
 import Sidebar from "@/views/Sidebar.vue";
 import Swal from "sweetalert2";
 import {
@@ -419,6 +459,72 @@ function formatEstatura(estatura) {
   return `${metros} m`;
 }
 
+function formatPrice(price) {
+  if (price == null) return "—";
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    maximumFractionDigits: 0,
+  }).format(price);
+}
+
+function traducirFrecuencia(frequency) {
+  const map = {
+    daily: "Diaria",
+    weekly: "Semanal",
+    biweekly: "Quincenal",
+    monthly: "Mensual",
+    quarterly: "Trimestral",
+    yearly: "Anual",
+  };
+  return map[frequency] || frequency || "—";
+}
+
+function traducirEstado(status) {
+  const map = {
+    active: "Activa",
+    expired: "Expirada",
+    inactive_unpaid: "Sin pago",
+    pending: "Pendiente",
+    inactive: "Inactiva",
+    cancelled: "Cancelada",
+  };
+  return map[status] || status || "—";
+}
+
+function membershipStatusColor(status) {
+  const map = {
+    active: "green",
+    expired: "red",
+    inactive_unpaid: "yellow",
+    pending: "yellow",
+    inactive: "gray",
+    cancelled: "gray",
+  };
+  return map[status] || "gray";
+}
+
+function membershipDays(member) {
+  const endDate = member?.memberships?.[0]?.end_date;
+  if (!endDate) return null;
+  return dayjs(endDate).diff(dayjs(), "day");
+}
+
+function membershipDaysText(member) {
+  const days = membershipDays(member);
+  if (days === null) return "—";
+  if (days < 0) return `Vencida hace ${Math.abs(days)} días`;
+  return `${days} días`;
+}
+
+function membershipDaysClass(member) {
+  const days = membershipDays(member);
+  if (days === null) return "";
+  if (days < 0) return "membership-days-danger";
+  if (days <= 7) return "membership-days-warning";
+  return "membership-days-success";
+}
+
 </script>
 
 <style scoped>
@@ -511,6 +617,115 @@ function formatEstatura(estatura) {
   color: var(--color-text);
   text-align: right;
   word-break: break-word;
+}
+
+.member-membership-block {
+  margin-top: 0.75rem;
+}
+
+.member-membership-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.member-membership-bar {
+  width: 0.18rem;
+  height: 1rem;
+  border-radius: 9999px;
+  background: #6366f1;
+}
+
+.member-membership-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.member-membership-cell {
+  min-width: 0;
+}
+
+.member-membership-main {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--color-text);
+}
+
+.member-membership-price {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.86rem;
+  font-weight: 900;
+  color: #3b82f6;
+}
+
+.member-membership-status {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 1.35rem;
+  padding: 0.12rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.membership-status-green {
+  background: rgba(34, 197, 94, 0.15);
+  color: #15803d;
+}
+
+.membership-status-red {
+  background: rgba(239, 68, 68, 0.14);
+  color: #dc2626;
+}
+
+.membership-status-yellow {
+  background: rgba(245, 158, 11, 0.18);
+  color: #b45309;
+}
+
+.membership-status-gray {
+  background: var(--color-overlay);
+  color: var(--color-text-muted);
+}
+
+.member-membership-days {
+  display: block;
+  font-size: 0.78rem;
+}
+
+.membership-days-danger {
+  color: #dc2626;
+}
+
+.membership-days-warning {
+  color: #d97706;
+}
+
+.membership-days-success {
+  color: #15803d;
+}
+
+.member-membership-empty {
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  background: var(--color-surface);
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
 }
 
 .member-notes {
