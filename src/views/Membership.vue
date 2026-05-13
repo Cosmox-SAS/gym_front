@@ -20,35 +20,56 @@
         </div>
       </div>
 
-      <div class="flex overflow-x-auto pb-2 gap-2 mb-4 scrollbar-hide">
-        <button
-          @click="filtrarMembresias('')"
-          class="btn btn-sm whitespace-nowrap"
-          :class="statusFilter === '' ? 'btn-primary' : 'btn-secondary'"
-        >
-          Todos
-        </button>
-        <button
-          @click="filtrarMembresias('active')"
-          class="btn btn-sm whitespace-nowrap"
-          :class="statusFilter === 'active' ? 'btn-primary' : 'btn-secondary'"
-        >
-          Activas
-        </button>
-        <button
-          @click="filtrarMembresias('inactive_unpaid')"
-          class="btn btn-sm whitespace-nowrap"
-          :class="statusFilter === 'inactive_unpaid' ? 'btn-primary' : 'btn-secondary'"
-        >
-          Por Pagar
-        </button>
-        <button
-          @click="filtrarMembresias('expiring_soon')"
-          class="btn btn-sm whitespace-nowrap"
-          :class="statusFilter === 'expiring_soon' ? 'btn-primary' : 'btn-secondary'"
-        >
-          Vencen Pronto
-        </button>
+      <div class="flex flex-col sm:flex-row gap-3 mb-4">
+        <div class="flex overflow-x-auto pb-2 gap-2 scrollbar-hide flex-1">
+          <button
+            @click="filtrarMembresias('')"
+            class="btn btn-sm whitespace-nowrap"
+            :class="statusFilter === '' ? 'btn-primary' : 'btn-secondary'"
+          >
+            Todos
+          </button>
+          <button
+            @click="filtrarMembresias('active')"
+            class="btn btn-sm whitespace-nowrap"
+            :class="statusFilter === 'active' ? 'btn-primary' : 'btn-secondary'"
+          >
+            Activas
+          </button>
+          <button
+            @click="filtrarMembresias('inactive_unpaid')"
+            class="btn btn-sm whitespace-nowrap"
+            :class="statusFilter === 'inactive_unpaid' ? 'btn-primary' : 'btn-secondary'"
+          >
+            Por Pagar
+          </button>
+          <button
+            @click="filtrarMembresias('expiring_soon')"
+            class="btn btn-sm whitespace-nowrap"
+            :class="statusFilter === 'expiring_soon' ? 'btn-primary' : 'btn-secondary'"
+          >
+            Vencen Pronto
+          </button>
+        </div>
+
+        <div class="flex gap-2 shrink-0">
+          <div class="w-40">
+            <BaseSelect
+              v-model="selectedFrequency"
+              :options="frecuenciaOpciones"
+              placeholder="Frecuencia"
+              size="sm"
+            />
+          </div>
+          <div class="w-40">
+            <BaseSelect
+              v-model="selectedType"
+              :options="tipoOpciones"
+              placeholder="Tipo de plan"
+              size="sm"
+            />
+          </div>
+        </div>
       </div>
 
       <div class="mb-4 relative">
@@ -324,6 +345,26 @@ const tituloFiltro = ref("Activas y Vencidas");
 const form = ref({ member_id: "", plan_id: "", end_date: "", status: "inactive_unpaid" });
 const busqueda = ref("");
 const miembroSeleccionado = ref(false);
+const selectedFrequency = ref("");
+const selectedType = ref("");
+const tipos = ref([]);
+
+const FREQUENCY_OPTIONS = [
+  { value: "daily", label: "Diario" },
+  { value: "weekly", label: "Semanal" },
+  { value: "biweekly", label: "Quincenal" },
+  { value: "monthly", label: "Mensual" },
+];
+
+const frecuenciaOpciones = computed(() => [
+  { value: "", label: "Todas las frecuencias" },
+  ...FREQUENCY_OPTIONS,
+]);
+
+const tipoOpciones = computed(() => [
+  { value: "", label: "Todos los tipos" },
+  ...tipos.value.map((t) => ({ value: t.id, label: t.name })),
+]);
 
 // Paginación
 const currentPage = ref(1);
@@ -353,6 +394,25 @@ watch(busquedaMembresia, () => {
   }, 350);
 });
 
+watch(selectedFrequency, () => {
+  currentPage.value = 1;
+  cargarMembresias();
+});
+
+watch(selectedType, () => {
+  currentPage.value = 1;
+  cargarMembresias();
+});
+
+const cargarTipos = async () => {
+  try {
+    const { data } = await api.get("/membershipType");
+    tipos.value = data;
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 // Cargas de Datos
 const cargarMembresias = async () => {
   loading.value = true;
@@ -360,6 +420,8 @@ const cargarMembresias = async () => {
     const params = new URLSearchParams();
     if (statusFilter.value) params.append("status", statusFilter.value);
     if (busquedaMembresia.value) params.append("search", busquedaMembresia.value);
+    if (selectedFrequency.value) params.append("frequency", selectedFrequency.value);
+    if (selectedType.value) params.append("membership_type_id", selectedType.value);
     params.append("page", currentPage.value);
     const { data } = await api.get(`/memberships?${params.toString()}`);
     membresias.value = data.data;
@@ -555,5 +617,6 @@ onMounted(() => {
   else cargarMembresias();
   cargarMiembros();
   cargarPlanes();
+  cargarTipos();
 });
 </script>
