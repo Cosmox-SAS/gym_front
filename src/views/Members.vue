@@ -76,14 +76,11 @@
               </div>
               <div class="min-w-0">
                 <h2 class="text-base font-bold text-default truncate">{{ member.name }}</h2>
-                <p class="text-sm text-muted mt-0.5 truncate">{{ member.phone || "Sin teléfono" }}</p>
-                <p class="text-xs text-subtle mt-0.5">{{ member.birth_date || "Sin fecha de nacimiento" }}</p>
+                <p class="text-sm text-muted mt-0.5 truncate">{{ member.email || "Sin correo electrónico" }}</p>
+                <p class="text-xs text-subtle mt-0.5">{{ member.identification ? `C.C ${member.identification}` : "C.C —" }}</p>
               </div>
             </div>
             <div class="flex flex-col items-end gap-2 shrink-0">
-              <p class="member-state-text" :class="`member-state-${statusColor(memberStatus(member))}`">
-                Estado: {{ member.memberships?.length ? traducirEstado(memberStatus(member)) : "Sin plan" }}
-              </p>
               <button
                 v-if="false"
                 @click="toggleDetalle(member.id)"
@@ -115,30 +112,7 @@
             v-if="detallesAbiertos.includes(member.id)"
             class="member-card-detail"
           >
-            <div class="member-detail-photo-shell">
-              <img
-                v-if="getPrimaryPhoto(member)"
-                :src="getPrimaryPhoto(member)"
-                :alt="`Foto inicial de ${member.name}`"
-                class="member-detail-photo"
-              />
-              <div v-else class="member-detail-photo-empty">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>Sin foto inicial</span>
-              </div>
-            </div>
-
             <div class="member-info-list">
-              <div class="member-info-row">
-                <span class="member-info-label">Cédula / ID</span>
-                <span class="member-info-value">{{ member.identification || "—" }}</span>
-              </div>
-              <div class="member-info-row">
-                <span class="member-info-label">Email</span>
-                <span class="member-info-value">{{ member.email || "—" }}</span>
-              </div>
               <div class="member-info-row">
                 <span class="member-info-label">Peso</span>
                 <span class="member-info-value">{{ member.peso ?? "—" }} kg</span>
@@ -154,7 +128,7 @@
             </div>
 
             <div class="member-notes">
-              {{ member.medical_history || "Sin antecedentes médicos" }}
+              {{ member.medical_history || "Objetivos / Observaciones" }}
             </div>
 
             <div class="pt-3 flex flex-wrap items-center gap-1.5">
@@ -445,36 +419,6 @@ function formatEstatura(estatura) {
   return `${metros} m`;
 }
 
-function memberStatus(member) {
-  return member?.memberships?.[0]?.status || "inactive";
-}
-
-function statusColor(status) {
-  const map = {
-    active: "green",
-    expired: "red",
-    pending: "yellow",
-    inactive_unpaid: "yellow",
-    cancelled: "gray",
-    inactive: "gray",
-  };
-  return map[status] || "gray";
-}
-
-// ... código existente ...
-
-const traducirEstado = (estado) => {
-  const diccionario = {
-    active: "Activa",
-    expired: "Vencida",
-    pending: "Pendiente",
-    inactive_unpaid: "Sin pago",
-    inactive: "Inactiva",
-    cancelled: "Cancelada",
-  };
-  // Si no encuentra la traducción, devuelve el estado original
-  return diccionario[estado] || estado;
-};
 </script>
 
 <style scoped>
@@ -530,46 +474,9 @@ const traducirEstado = (estado) => {
   background: rgba(99, 102, 241, 0.12);
 }
 
-.member-state-text {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-
-.member-state-green { color: #15803d; }
-.member-state-red { color: #dc2626; }
-.member-state-yellow { color: #b45309; }
-.member-state-gray { color: var(--color-text-muted); }
-
 .member-card-detail {
   padding: 0.9rem 1rem 1rem;
   background: var(--color-surface-soft);
-}
-
-.member-detail-photo-shell {
-  border: 1px solid var(--color-border);
-  border-radius: 0.75rem;
-  overflow: hidden;
-  background: var(--color-surface);
-  margin-bottom: 0.75rem;
-}
-
-.member-detail-photo {
-  width: 100%;
-  height: 9rem;
-  object-fit: cover;
-  display: block;
-}
-
-.member-detail-photo-empty {
-  height: 9rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  font-size: 0.75rem;
-  color: var(--color-text-subtle);
 }
 
 .member-info-list {
@@ -713,7 +620,4 @@ const traducirEstado = (estado) => {
   background: rgba(99, 102, 241, 0.2);
 }
 
-:global(.dark) .member-state-green { color: #4ade80; }
-:global(.dark) .member-state-red { color: #fca5a5; }
-:global(.dark) .member-state-yellow { color: #fcd34d; }
 </style>
