@@ -80,32 +80,24 @@
                 <p class="text-xs text-subtle mt-0.5">{{ member.identification ? `C.C ${member.identification}` : "C.C —" }}</p>
               </div>
             </div>
-            <div class="flex flex-col items-end gap-2 shrink-0">
+            <div class="flex flex-col items-end justify-center gap-2 shrink-0 h-20">
+              <p class="text-xs font-bold" :class="`member-state-${membershipStatusColor(member.memberships?.[0]?.status)}`">
+                Estado: {{ member.memberships?.length ? traducirEstado(member.memberships[0].status) : "Sin plan" }}
+              </p>
+
               <button
-                v-if="false"
                 @click="toggleDetalle(member.id)"
-                class="text-xs font-bold px-3 py-1 rounded-full border transition-all h-8 flex items-center select-none"
+                class="text-xs font-bold px-3 py-1 rounded-full border transition-all h-8 inline-flex items-center gap-1 select-none"
                 :class="
                   detallesAbiertos.includes(member.id)
                     ? 'detail-toggle-active'
                     : 'bg-[var(--color-overlay)] text-muted border-default-soft'
                 "
               >
-                {{ detallesAbiertos.includes(member.id) ? "Ocultar" : "Ver más" }}
+                <component :is="detallesAbiertos.includes(member.id) ? ChevronUp : ChevronDown" class="w-3.5 h-3.5" aria-hidden="true" />
+                <span>{{ detallesAbiertos.includes(member.id) ? "Ocultar" : "Ver más" }}</span>
               </button>
             </div>
-            <button
-              @click="toggleDetalle(member.id)"
-              class="text-xs font-bold px-3 py-1 rounded-full border transition-all h-8 inline-flex items-center gap-1 select-none"
-              :class="
-                detallesAbiertos.includes(member.id)
-                  ? 'detail-toggle-active'
-                  : 'bg-[var(--color-overlay)] text-muted border-default-soft'
-              "
-            >
-              <component :is="detallesAbiertos.includes(member.id) ? ChevronUp : ChevronDown" class="w-3.5 h-3.5" aria-hidden="true" />
-              <span>{{ detallesAbiertos.includes(member.id) ? "Ocultar" : "Ver más" }}</span>
-            </button>
           </div>
 
           <div
@@ -142,12 +134,6 @@
                       <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-400 shrink-0">{{ traducirFrecuencia(member.memberships[0].plan?.frequency) }}</span>
                     </div>
                     <div class="text-primary-600 dark:text-primary-400 font-black text-[13px] mt-0.5">{{ formatPrice(member.memberships[0].plan?.price) }}</div>
-                  </div>
-                  <div class="text-right shrink-0">
-                    <span class="member-info-label mb-1">Estado</span>
-                    <span class="member-membership-status" :class="`membership-status-${membershipStatusColor(member.memberships[0].status)}`">
-                      {{ traducirEstado(member.memberships[0].status) }}
-                    </span>
                   </div>
                 </div>
 
@@ -708,6 +694,18 @@ function membershipDaysClass(member) {
 .membership-days-success {
   color: #15803d;
 }
+
+.member-state-green { color: #16a34a; }
+:global(.dark) .member-state-green { color: #22c55e; }
+
+.member-state-red { color: #dc2626; }
+:global(.dark) .member-state-red { color: #ef4444; }
+
+.member-state-yellow { color: #d97706; }
+:global(.dark) .member-state-yellow { color: #f59e0b; }
+
+.member-state-gray { color: #6b7280; }
+:global(.dark) .member-state-gray { color: #9ca3af; }
 
 .member-membership-empty {
   border: 1px solid var(--color-border);
