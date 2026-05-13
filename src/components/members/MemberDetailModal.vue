@@ -187,25 +187,38 @@
                     <div
                       v-for="(label, i) in initialPhotoLabels"
                       :key="i"
-                      class="progress-photo-slot"
+                      class="flex flex-col gap-2 items-center"
                     >
-                      <img
-                        v-if="initialPhotos[i]?.photo"
-                        :src="initialPhotos[i].photo"
-                        :alt="`Foto inicial ${label}`"
-                        class="progress-photo-img"
-                      />
-                      <div v-else class="progress-photo-empty">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span class="text-[11px] font-bold uppercase tracking-wider mt-1.5">{{ label }}</span>
-                        <span class="text-[10px] text-subtle mt-0.5">Sin foto</span>
-                      </div>
-                      <span class="progress-photo-tag">{{ label }}</span>
-                      <span v-if="initialPhotos[i]?.taken_at" class="progress-photo-date">
-                        {{ formatDate(initialPhotos[i].taken_at) }}
+                      <!-- Etiqueta superior (Diseño cápsula de editar) -->
+                      <span class="px-3 py-1 rounded-full bg-gray-800/70 text-white text-[10px] font-bold uppercase tracking-widest shadow-sm">
+                        {{ label }}
                       </span>
+
+                      <!-- Marco de la foto -->
+                      <div class="progress-photo-slot w-full">
+                        <img
+                          v-if="initialPhotos[i]?.photo"
+                          :src="initialPhotos[i].photo"
+                          :alt="`Foto inicial ${label}`"
+                          class="progress-photo-img"
+                        />
+                        <div v-else class="progress-photo-empty">
+                          <svg class="w-7 h-7 opacity-50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span class="text-[10px] text-subtle mt-1.5 uppercase font-bold">Sin foto</span>
+                        </div>
+                      </div>
+
+                      <!-- Fecha inferior (Diseño cápsula de editar) -->
+                      <div class="h-6 flex items-center justify-center">
+                        <span v-if="initialPhotos[i]?.taken_at" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-800/70 text-white text-[11px] font-semibold shadow-sm">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          {{ formatDate(initialPhotos[i].taken_at) }}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -517,35 +530,7 @@ function traducirEstado(estado) {
   color: var(--color-text-subtle);
 }
 
-.progress-photo-tag {
-  position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  font-size: 0.625rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: white;
-  background: rgba(0, 0, 0, 0.55);
-  padding: 0.2rem 0.55rem;
-  border-radius: 9999px;
-  backdrop-filter: blur(4px);
-}
 
-.progress-photo-date {
-  position: absolute;
-  bottom: 0.5rem;
-  left: 0.5rem;
-  right: 0.5rem;
-  text-align: center;
-  font-size: 0.625rem;
-  font-weight: 600;
-  color: white;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 0.2rem 0.4rem;
-  border-radius: 9999px;
-  backdrop-filter: blur(4px);
-}
 
 .info-label {
   display: block; font-size: 0.625rem; font-weight: 700;

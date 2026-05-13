@@ -4,40 +4,47 @@
         <div
           v-for="(label, i) in labels"
           :key="i"
-          class="photo-slot"
+          class="photo-slot items-center"
         >
-        <div class="photo-frame">
-          <img
-            v-if="photos[i]?.photo"
-            :src="photos[i].photo"
-            :alt="`Foto ${label}`"
-            class="photo-img"
-          />
-          <div v-else class="photo-empty">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span class="text-[10px] text-subtle mt-1.5">Sin foto</span>
-          </div>
+          <!-- Etiqueta superior -->
           <span class="photo-tag">{{ label }}</span>
-          <span v-if="photos[i]?.taken_at" class="photo-date">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            {{ formatDate(photos[i].taken_at) }}
-          </span>
-          <button
-            v-if="photos[i]?.photo"
-            type="button"
-            class="photo-remove"
-            aria-label="Quitar foto"
-            @click="removePhoto(i)"
-          >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+
+          <div class="photo-frame w-full">
+            <img
+              v-if="photos[i]?.photo"
+              :src="photos[i].photo"
+              :alt="`Foto ${label}`"
+              class="photo-img"
+            />
+            <div v-else class="photo-empty">
+              <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span class="text-[10px] text-subtle mt-1.5 uppercase font-bold">Sin foto</span>
+            </div>
+
+            <button
+              v-if="photos[i]?.photo"
+              type="button"
+              class="photo-remove"
+              aria-label="Quitar foto"
+              @click="removePhoto(i)"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Fecha inferior -->
+          <div class="h-6 flex items-center justify-center">
+            <span v-if="photos[i]?.taken_at" class="photo-date">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {{ formatDate(photos[i].taken_at) }}
+            </span>
+          </div>
         <div class="photo-actions">
           <button
             type="button"
@@ -412,25 +419,20 @@ onBeforeUnmount(() => {
 }
 
 .photo-tag {
-  position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
+  display: inline-flex;
   font-size: 0.625rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: white;
-  background: rgba(0, 0, 0, 0.55);
-  padding: 0.2rem 0.55rem;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 0.2rem 0.75rem;
   border-radius: 9999px;
   backdrop-filter: blur(4px);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .photo-date {
-  position: absolute;
-  bottom: 0.5rem;
-  left: 0.5rem;
-  right: 0.5rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -438,10 +440,11 @@ onBeforeUnmount(() => {
   font-size: 0.6875rem;
   font-weight: 600;
   color: white;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 0.25rem 0.5rem;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 0.25rem 0.6rem;
   border-radius: 9999px;
   backdrop-filter: blur(4px);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .photo-remove {
