@@ -20,56 +20,47 @@
         </div>
       </div>
 
-      <div class="flex flex-col sm:flex-row gap-3 mb-4">
-        <div class="flex overflow-x-auto pb-2 gap-2 scrollbar-hide flex-1">
-          <button
-            @click="filtrarMembresias('')"
-            class="btn btn-sm whitespace-nowrap"
-            :class="statusFilter === '' ? 'btn-primary' : 'btn-secondary'"
-          >
-            Todos
-          </button>
-          <button
-            @click="filtrarMembresias('active')"
-            class="btn btn-sm whitespace-nowrap"
-            :class="statusFilter === 'active' ? 'btn-primary' : 'btn-secondary'"
-          >
-            Activas
-          </button>
-          <button
-            @click="filtrarMembresias('inactive_unpaid')"
-            class="btn btn-sm whitespace-nowrap"
-            :class="statusFilter === 'inactive_unpaid' ? 'btn-primary' : 'btn-secondary'"
-          >
-            Por Pagar
-          </button>
-          <button
-            @click="filtrarMembresias('expiring_soon')"
-            class="btn btn-sm whitespace-nowrap"
-            :class="statusFilter === 'expiring_soon' ? 'btn-primary' : 'btn-secondary'"
-          >
-            Vencen Pronto
-          </button>
-        </div>
+      <div class="flex flex-wrap items-center gap-2 mb-4">
+        <button
+          @click="filtrarMembresias('')"
+          class="btn btn-sm whitespace-nowrap"
+          :class="statusFilter === '' ? 'btn-primary' : 'btn-secondary'"
+        >
+          Todos
+        </button>
+        <button
+          @click="filtrarMembresias('active')"
+          class="btn btn-sm whitespace-nowrap"
+          :class="statusFilter === 'active' ? 'btn-primary' : 'btn-secondary'"
+        >
+          Activas
+        </button>
+        <button
+          @click="filtrarMembresias('inactive_unpaid')"
+          class="btn btn-sm whitespace-nowrap"
+          :class="statusFilter === 'inactive_unpaid' ? 'btn-primary' : 'btn-secondary'"
+        >
+          Por Pagar
+        </button>
+        <button
+          @click="filtrarMembresias('expiring_soon')"
+          class="btn btn-sm whitespace-nowrap"
+          :class="statusFilter === 'expiring_soon' ? 'btn-primary' : 'btn-secondary'"
+        >
+          Vencen Pronto
+        </button>
 
-        <div class="flex gap-2 shrink-0">
-          <div class="w-40">
-            <BaseSelect
-              v-model="selectedFrequency"
-              :options="frecuenciaOpciones"
-              placeholder="Frecuencia"
-              size="sm"
-            />
-          </div>
-          <div class="w-40">
-            <BaseSelect
-              v-model="selectedType"
-              :options="tipoOpciones"
-              placeholder="Tipo de plan"
-              size="sm"
-            />
-          </div>
-        </div>
+        <select
+          v-model="selectedFrequency"
+          class="btn btn-sm btn-secondary whitespace-nowrap pr-7 appearance-none cursor-pointer"
+          style="background-image: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3E%3Cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 0.4rem center; background-size: 1rem;"
+        >
+          <option value="">Frecuencia</option>
+          <option value="daily">Diario</option>
+          <option value="weekly">Semanal</option>
+          <option value="biweekly">Quincenal</option>
+          <option value="monthly">Mensual</option>
+        </select>
       </div>
 
       <div class="mb-4 relative">
