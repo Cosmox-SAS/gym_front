@@ -42,10 +42,16 @@
           </div>
 
           <!-- Avatar overlap -->
-          <div class="relative px-6 sm:px-10 -mt-14 pb-5">
+          <div class="relative px-6 sm:px-10 -mt-16 pb-5">
             <div class="flex flex-col sm:flex-row sm:items-end gap-4">
-              <div class="w-20 h-20 rounded-2xl bg-[var(--color-surface)] p-1 shadow-lg shrink-0">
-                <div class="w-full h-full rounded-xl flex items-center justify-center text-2xl font-black text-white bg-gradient-to-br from-primary-500 to-indigo-600">
+              <div class="w-24 h-32 rounded-2xl bg-[var(--color-surface)] p-1 shadow-lg shrink-0">
+                <img
+                  v-if="primaryPhoto"
+                  :src="primaryPhoto"
+                  class="w-full h-full rounded-xl object-cover"
+                  :alt="`Foto de ${member?.name}`"
+                />
+                <div v-else class="w-full h-full rounded-xl flex items-center justify-center text-3xl font-black text-white bg-gradient-to-br from-primary-500 to-indigo-600">
                   {{ (member?.name || "?").charAt(0).toUpperCase() }}
                 </div>
               </div>
@@ -173,31 +179,11 @@
 
                 <div class="detail-card">
                   <div class="section-header">
-                    <span class="section-bar bg-amber-500" />
-                    <h2 class="section-title" style="color: var(--color-text-muted);">Objetivos / Observaciones</h2>
-                  </div>
-                  <div
-                    v-if="member.medical_history"
-                    class="bg-[var(--color-surface-soft)] border border-default-soft rounded-xl p-4 text-sm text-default whitespace-pre-wrap leading-relaxed"
-                  >
-                    {{ member.medical_history }}
-                  </div>
-                  <p v-else class="text-sm italic text-subtle">
-                    Sin objetivos / observaciones registrados.
-                  </p>
-                </div>
-
-              </div>
-
-              <!-- ===== Fotos Iniciales (frente, perfil, espalda) ===== -->
-              <div class="space-y-5">
-                <div class="detail-card">
-                  <div class="section-header">
                     <span class="section-bar bg-success-600" />
                     <h2 class="section-title" style="color: var(--color-text-muted);">Fotos Iniciales</h2>
                   </div>
 
-                  <div class="space-y-3">
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div
                       v-for="(label, i) in initialPhotoLabels"
                       :key="i"
@@ -222,6 +208,26 @@
                       </span>
                     </div>
                   </div>
+                </div>
+
+              </div>
+
+              <!-- ===== Columna Secundaria ===== -->
+              <div class="space-y-5">
+                <div class="detail-card">
+                  <div class="section-header">
+                    <span class="section-bar bg-amber-500" />
+                    <h2 class="section-title" style="color: var(--color-text-muted);">Objetivos / Observaciones</h2>
+                  </div>
+                  <div
+                    v-if="member.medical_history"
+                    class="bg-[var(--color-surface-soft)] border border-default-soft rounded-xl p-4 text-sm text-default whitespace-pre-wrap leading-relaxed"
+                  >
+                    {{ member.medical_history }}
+                  </div>
+                  <p v-else class="text-sm italic text-subtle">
+                    Sin objetivos / observaciones registrados.
+                  </p>
                 </div>
               </div>
             </div>
@@ -320,6 +326,10 @@ const initialPhotos = computed(() => {
   const raw = member.value?.initial_photos;
   if (!Array.isArray(raw)) return [null, null, null];
   return [normalizePhotoEntry(raw[0]), normalizePhotoEntry(raw[1]), normalizePhotoEntry(raw[2])];
+});
+
+const primaryPhoto = computed(() => {
+  return initialPhotos.value.find(p => p?.photo)?.photo || "";
 });
 
 function formatDate(iso) {
