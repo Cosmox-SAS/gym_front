@@ -135,8 +135,9 @@
 
               <div v-if="member.memberships?.length" class="member-membership-grid">
                 <div class="member-membership-cell">
-                  <span class="member-info-label">Plan actual</span>
-                  <strong class="member-membership-main">{{ traducirFrecuencia(member.memberships[0].plan?.frequency) }}</strong>
+                  <span class="member-info-label">Tipo de plan</span>
+                  <strong class="member-membership-main">{{ membershipPlanType(member) }}</strong>
+                  <span class="member-membership-frequency">{{ traducirFrecuencia(member.memberships[0].plan?.frequency) }}</span>
                   <span class="member-membership-price">{{ formatPrice(member.memberships[0].plan?.price) }}</span>
                 </div>
                 <div class="member-membership-cell">
@@ -480,6 +481,11 @@ function traducirFrecuencia(frequency) {
   return map[frequency] || frequency || "—";
 }
 
+function membershipPlanType(member) {
+  const plan = member?.memberships?.[0]?.plan;
+  return plan?.type?.name || plan?.membership_type?.name || plan?.membershipType?.name || "—";
+}
+
 function traducirEstado(status) {
   const map = {
     active: "Activa",
@@ -660,6 +666,14 @@ function membershipDaysClass(member) {
   display: block;
   font-size: 0.8rem;
   color: var(--color-text);
+}
+
+.member-membership-frequency {
+  display: block;
+  margin-top: 0.18rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
 }
 
 .member-membership-price {
