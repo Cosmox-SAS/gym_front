@@ -2,11 +2,14 @@
   <div class="page-layout">
     <BaseCard title="Planes de Membresía" subtitle="Gestiona los planes disponibles" class="space-y-6">
       <template #actions>
-        <router-link to="/Menu" class="btn btn-secondary flex-1 sm:flex-none inline-flex items-center justify-center gap-2">
-          <Home class="w-4 h-4" aria-hidden="true" />
-          <span>Inicio</span>
-        </router-link>
-        <BaseButton variant="success" class="flex-1 sm:flex-none" @click="openModal = true">
+        <div class="w-full sm:w-56">
+          <BaseSelect
+            v-model="selectedFrequency"
+            :options="frecuenciaOpciones"
+            placeholder="Todas las frecuencias"
+          />
+        </div>
+        <BaseButton variant="success" class="flex-1 sm:flex-none" @click="abrirModalCrear">
           <Plus class="w-4 h-4" aria-hidden="true" />
           Nuevo plan
         </BaseButton>
@@ -49,11 +52,11 @@
       </div>
 
       <div
-        v-if="totalPlanesPages > 1"
-        class="flex items-center justify-between text-sm text-muted"
+        v-if="planesFiltrados.length > 0"
+        class="flex items-center justify-between text-sm text-muted mt-4"
       >
-        <span>Página {{ currentPagePlanes }} de {{ totalPlanesPages }}</span>
-        <div class="flex gap-1">
+        <span>Página {{ currentPagePlanes }} de {{ totalPlanesPages || 1 }} ({{ planesFiltrados.length }} registros)</span>
+        <div class="flex gap-1" v-if="totalPlanesPages > 1">
           <BaseButton
             variant="secondary"
             size="sm"
@@ -83,14 +86,6 @@
           label="Tipo de Membresía"
           placeholder="Seleccione un tipo"
           :options="tipos.map((t) => ({ value: t.id, label: t.name }))"
-          required
-        />
-
-        <BaseSelect
-          v-model="nuevoPlan.frequency"
-          label="Frecuencia"
-          placeholder="Seleccione frecuencia"
-          :options="FREQUENCY_OPTIONS"
           required
         />
 
@@ -159,7 +154,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import api from "@/axios";
 import Swal from "sweetalert2";
 import { BaseButton, BaseInput, BaseSelect, BaseCard, BaseBadge, BaseModal } from "@/components/ui";
@@ -186,11 +181,30 @@ const FREQUENCY_OPTIONS = [
 const planes = ref([]);
 const currentPagePlanes = ref(1);
 const PER_PAGE = 10;
-const totalPlanesPages = computed(() => Math.ceil(planes.value.length / PER_PAGE));
+const selectedFrequency = ref("");
+
+const frecuenciaOpciones = computed(() => {
+  return [
+    { value: "", label: "Todas las frecuencias" },
+    ...FREQUENCY_OPTIONS
+  ];
+});
+
+const planesFiltrados = computed(() => {
+  if (!selectedFrequency.value) return planes.value;
+  return planes.value.filter(p => p.frequency === selectedFrequency.value);
+});
+
+const totalPlanesPages = computed(() => Math.ceil(planesFiltrados.value.length / PER_PAGE));
 const planesPaginados = computed(() => {
   const start = (currentPagePlanes.value - 1) * PER_PAGE;
-  return planes.value.slice(start, start + PER_PAGE);
+  return planesFiltrados.value.slice(start, start + PER_PAGE);
 });
+
+watch(selectedFrequency, () => {
+  currentPagePlanes.value = 1;
+});
+
 const tipos = ref([]);
 const openModal = ref(false);
 const editModal = ref(false);
@@ -211,6 +225,19 @@ const cargarPlanes = async () => {
 const cargarTipos = async () => {
   const { data } = await api.get("/membershipType");
   tipos.value = data;
+};
+
+const abrirModalCrear = () => {
+  if (!selectedFrequency.value) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Falta información',
+      text: 'Debes seleccionar una "Frecuencia" (Diario, Semanal...) en el filtro superior para crearle un plan.'
+    });
+    return;
+  }
+  nuevoPlan.value.frequency = selectedFrequency.value;
+  openModal.value = true;
 };
 
 const crearPlan = async () => {
