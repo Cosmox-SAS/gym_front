@@ -161,6 +161,8 @@ onMounted(async () => {
 <style scoped>
 .marquee {
   overflow: hidden;
+  padding: 1rem 0;
+  margin: -1rem 0;
   mask-image: linear-gradient(to right, transparent 0, #000 4%, #000 96%, transparent 100%);
   -webkit-mask-image: linear-gradient(to right, transparent 0, #000 4%, #000 96%, transparent 100%);
 }
