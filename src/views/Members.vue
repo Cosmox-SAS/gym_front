@@ -37,7 +37,7 @@
         No hay Clientes registrados.
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
         <div
           v-for="member in miembrosPaginados"
           :key="member.id"
@@ -89,19 +89,19 @@
                 @click="toggleDetalle(member.id)"
                 class="text-xs font-bold px-3 py-1 rounded-full border transition-all h-8 inline-flex items-center gap-1 select-none"
                 :class="
-                  detallesAbiertos.includes(member.id)
+                  isDetalleAbierto(member.id)
                     ? 'detail-toggle-active'
                     : 'bg-[var(--color-overlay)] text-muted border-default-soft'
                 "
               >
-                <component :is="detallesAbiertos.includes(member.id) ? ChevronUp : ChevronDown" class="w-3.5 h-3.5" aria-hidden="true" />
-                <span>{{ detallesAbiertos.includes(member.id) ? "Ocultar" : "Ver más" }}</span>
+                <component :is="isDetalleAbierto(member.id) ? ChevronUp : ChevronDown" class="w-3.5 h-3.5" aria-hidden="true" />
+                <span>{{ isDetalleAbierto(member.id) ? "Ocultar" : "Ver más" }}</span>
               </button>
             </div>
           </div>
 
           <div
-            v-if="detallesAbiertos.includes(member.id)"
+            v-if="isDetalleAbierto(member.id)"
             class="member-card-detail"
           >
             <div class="member-info-list">
@@ -306,6 +306,7 @@ const showAssignModal = ref(false);
 const showPaymentModal = ref(false);
 const showDetailModal = ref(false);
 const selectedDetailId = ref(null);
+const detalleKey = (id) => String(id);
 
 onMounted(() => {
   cargarMiembros();
@@ -390,17 +391,19 @@ const handleMemberAssigned = async (member) => {
 };
 
 // --- Utilidades ---
-// Corregido con if/else para evitar el error de ESLint
 const toggleDetalle = (id) => {
-  if (detallesAbiertos.value.includes(id)) {
-    detallesAbiertos.value = detallesAbiertos.value.filter((i) => i !== id);
-    if (selectedDetailId.value === id) {
+  const key = detalleKey(id);
+  if (detallesAbiertos.value.includes(key)) {
+    detallesAbiertos.value = detallesAbiertos.value.filter((i) => i !== key);
+    if (selectedDetailId.value !== null && detalleKey(selectedDetailId.value) === key) {
       cerrarDetalle();
     }
   } else {
-    detallesAbiertos.value.push(id);
+    detallesAbiertos.value.push(key);
   }
 };
+
+const isDetalleAbierto = (id) => detallesAbiertos.value.includes(detalleKey(id));
 
 const abrirAsignar = (member) => {
   selectedMember.value = member;
