@@ -5,11 +5,11 @@
         <div>
           <div class="flex items-center gap-2 mb-3">
             <span class="config-status-dot" />
-            <span class="section-label">Centro de configuracion</span>
+            <span class="section-label">Centro de configuración</span>
           </div>
-          <h1 class="config-title">Configuracion</h1>
+          <h1 class="config-title">Configuración</h1>
           <p class="config-subtitle">
-            Ajusta la experiencia de bienvenida, el enlace comunitario y el registro publico del gimnasio.
+            Ajusta la experiencia de bienvenida, el enlace comunitario y el registro público del gimnasio.
           </p>
         </div>
 
@@ -21,7 +21,7 @@
 
       <div v-if="loading" class="config-loading animate-fade-in-up">
         <Loader2 class="w-5 h-5 animate-spin" aria-hidden="true" />
-        <span>Cargando configuracion...</span>
+        <span>Cargando configuración...</span>
       </div>
 
       <form v-else @submit.prevent="guardarConfiguracion" class="config-grid animate-fade-in-up">
@@ -32,7 +32,7 @@
             </div>
             <div>
               <h2>Bienvenida a clientes</h2>
-              <p>Contenido que se enviara automaticamente por correo a los nuevos registros.</p>
+              <p>Contenido que se enviará automáticamente por correo a los nuevos registros.</p>
             </div>
           </div>
 
@@ -40,7 +40,7 @@
             <label class="config-field">
               <span class="config-label">
                 <Clock class="w-4 h-4" aria-hidden="true" />
-                Horarios de atencion
+                Horarios de atención
               </span>
               <textarea
                 v-model="form.horarios"
@@ -62,7 +62,7 @@
                 class="field-input config-textarea"
                 placeholder="Ej: 1. Uso obligatorio de toalla.&#10;2. Ordenar las pesas al terminar.&#10;3. No ingresar alimentos."
               />
-              <span class="config-help">Usa lineas cortas para que el mensaje sea facil de leer desde el celular.</span>
+              <span class="config-help">Usa líneas cortas para que el mensaje sea fácil de leer desde el celular.</span>
             </label>
 
             <label class="config-field">
@@ -77,7 +77,7 @@
                 placeholder="https://chat.whatsapp.com/ExampleCode..."
               />
               <span class="config-help">
-                Si lo dejas vacio, el boton de WhatsApp no aparecera en el correo.
+                Si lo dejas vacío, el botón de WhatsApp no aparecerá en el correo.
               </span>
             </label>
           </div>
@@ -102,8 +102,8 @@
                 <QrCode class="w-5 h-5" aria-hidden="true" />
               </div>
               <div>
-                <h2>Registro publico</h2>
-                <p>QR para que tus clientes se registren desde recepcion.</p>
+                <h2>Registro público</h2>
+                <p>QR para que tus clientes se registren desde recepción.</p>
               </div>
             </div>
 
@@ -152,9 +152,9 @@
               <Settings class="w-5 h-5" aria-hidden="true" />
             </div>
             <div>
-              <h3>Recomendacion</h3>
+              <h3>Recomendación</h3>
               <p>
-                Manten horarios y normas actualizados antes de compartir el QR en recepcion o redes.
+                Mantén horarios y normas actualizados antes de compartir el QR en recepción o redes.
               </p>
             </div>
           </section>
@@ -217,7 +217,7 @@ onMounted(async () => {
     form.value.url_grupo_whatsapp = data.url_grupo_whatsapp || "";
   } catch (error) {
     console.error(error);
-    Swal.fire("Error", "No se pudo cargar la informacion del gimnasio", "error");
+    Swal.fire("Error", "No se pudo cargar la información del gimnasio", "error");
   } finally {
     loading.value = false;
   }
@@ -230,7 +230,7 @@ const guardarConfiguracion = async () => {
 
     Swal.fire({
       title: "Guardado",
-      text: "La configuracion de bienvenida ha sido actualizada.",
+      text: "La configuración de bienvenida ha sido actualizada.",
       icon: "success",
       confirmButtonColor: "#2563EB",
     });
@@ -280,8 +280,8 @@ const imprimirQR = () => {
       </head>
       <body>
         <div class="container">
-          <h1>Registrate aqui</h1>
-          <p>Escanea este codigo para crear tu cuenta en el gimnasio.</p>
+          <h1>Regístrate aquí</h1>
+          <p>Escanea este código para crear tu cuenta en el gimnasio.</p>
           <img src="${qrImageUrl.value}" />
           <div class="footer">CosmoGym - Registro de Clientes</div>
         </div>
