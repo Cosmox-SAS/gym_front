@@ -2,7 +2,7 @@
   <div class="page-layout">
     <BaseCard title="Caja Diaria" subtitle="Control de apertura y cierre" class="space-y-6">
       <template #actions>
-        <router-link to="/Menu" class="btn btn-secondary flex-1 sm:flex-none inline-flex items-center justify-center gap-2">
+        <router-link to="/Menu" class="btn btn-dark flex-1 sm:flex-none inline-flex items-center justify-center gap-2">
           <Home class="w-4 h-4" aria-hidden="true" />
           <span>Inicio</span>
         </router-link>

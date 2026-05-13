@@ -9,6 +9,10 @@
             placeholder="Todas las frecuencias"
           />
         </div>
+        <router-link to="/Menu" class="btn btn-dark flex-1 sm:flex-none inline-flex items-center justify-center gap-2">
+          <Home class="w-4 h-4" aria-hidden="true" />
+          <span>Inicio</span>
+        </router-link>
         <BaseButton variant="success" class="flex-1 sm:flex-none" @click="abrirModalCrear">
           <Plus class="w-4 h-4" aria-hidden="true" />
           Nuevo plan
