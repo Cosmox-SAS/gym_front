@@ -242,31 +242,18 @@
         <div class="w-full max-w-md p-6 rounded-xl shadow-2xl" :style="{ background: 'var(--modal-panel-bg)', border: '1px solid var(--modal-panel-border)' }">
           <h2 id="membership-assign-modal-title" class="font-bold text-lg mb-4 border-b border-default-soft pb-2 flex items-center gap-2 text-default">
             <CalendarCheck2 class="w-5 h-5" aria-hidden="true" />
-            {{ form.member_id ? "Asignar membresía a " + busqueda : "Asignar Nueva" }}
+            Asignar / Renovar Membresía
           </h2>
           <form @submit.prevent="asignarMembresia" class="space-y-4">
-            <!-- Solo mostrar búsqueda si NO hay member_id pre-seleccionado -->
-            <div v-if="!form.member_id">
+            <div>
               <label class="text-xs font-bold uppercase text-subtle">Buscar Cliente</label>
-              <input
-                v-model="busqueda"
-                type="text"
-                placeholder="Nombre..."
-                class="field-input"
+              <BaseSelect
+                v-model="form.member_id"
+                :options="memberOptions"
+                placeholder="Nombre del cliente..."
+                searchable
+                empty-text="No se encontraron clientes"
               />
-              <ul
-                v-if="miembrosFiltrados.length"
-                class="border border-default-soft rounded-lg mt-1 max-h-32 overflow-y-auto bg-[var(--color-surface)] absolute w-64 z-10 shadow-lg"
-              >
-                <li
-                  v-for="m in miembrosFiltrados"
-                  :key="m.id"
-                  @click="seleccionarMiembro(m)"
-                  class="p-2 hover:bg-[var(--color-surface-soft)] cursor-pointer text-sm border-b border-default-soft"
-                >
-                  {{ m.name }}
-                </li>
-              </ul>
             </div>
 
             <div>
@@ -351,15 +338,9 @@ const paginasVisibles = computed(() => {
   return pages;
 });
 
-// Búsqueda en modal de asignar (solo local)
-const miembrosFiltrados = computed(() => {
-  const term = busqueda.value.toLowerCase();
-  return term
-    ? miembros.value.filter(
-        (m) => m.name.toLowerCase().includes(term) || (m.email || "").toLowerCase().includes(term),
-      )
-    : [];
-});
+const memberOptions = computed(() =>
+  miembros.value.map((m) => ({ value: m.id, label: m.name }))
+);
 
 // Watcher para búsqueda server-side con debounce
 let searchTimeout = null;
@@ -435,17 +416,10 @@ const filtrarMembresias = (status) => {
   cargarMembresias();
 };
 
-// Acciones Modales
-const seleccionarMiembro = (miembro) => {
-  form.value.member_id = miembro.id;
-  busqueda.value = miembro.name;
-  // Ocultar resultados al seleccionar
-  miembroSeleccionado.value = true;
-};
 const cerrarModal = () => {
   showModal.value = false;
   busqueda.value = "";
-  form.value = { member_id: "", plan_id: "", status: "inactive_unpaid" }; // Cambiado de "active" a "inactive_unpaid"
+  form.value = { member_id: "", plan_id: "", status: "inactive_unpaid" };
   miembroSeleccionado.value = false;
 };
 
@@ -480,9 +454,8 @@ const asignarMembresia = async () => {
 };
 
 const abrirRenovacion = (m) => {
-  // Usamos la misma lógica que "seleccionarMiembro" pero pre-llenamos desde la fila
   if (m.member) {
-    seleccionarMiembro(m.member);
+    form.value.member_id = m.member.id;
     showModal.value = true;
     miembroSeleccionado.value = true;
   }
