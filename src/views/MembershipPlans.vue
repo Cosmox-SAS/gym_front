@@ -33,11 +33,11 @@
               </td>
               <td>
                 <div class="flex justify-center gap-2">
-                  <BaseButton variant="indigo" size="sm" @click="editarPlan(plan)">
+                  <BaseButton variant="indigo" size="sm" class="min-w-24 justify-center" @click="editarPlan(plan)">
                     <Pencil class="w-3.5 h-3.5" aria-hidden="true" />
                     Editar
                   </BaseButton>
-                  <BaseButton variant="danger" size="sm" @click="eliminarPlan(plan.id)">
+                  <BaseButton variant="danger" size="sm" class="min-w-24 justify-center" @click="eliminarPlan(plan.id)">
                     <Trash2 class="w-3.5 h-3.5" aria-hidden="true" />
                     Eliminar
                   </BaseButton>
