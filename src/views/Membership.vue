@@ -50,17 +50,13 @@
           Vencen Pronto
         </button>
 
-        <select
-          v-model="selectedFrequency"
-          class="btn btn-sm btn-secondary whitespace-nowrap pr-7 appearance-none cursor-pointer"
-          style="background-image: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 20 20\'%3E%3Cpath stroke=\'%236b7280\' stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M6 8l4 4 4-4\'/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 0.4rem center; background-size: 1rem;"
-        >
-          <option value="">Frecuencia</option>
-          <option value="daily">Diario</option>
-          <option value="weekly">Semanal</option>
-          <option value="biweekly">Quincenal</option>
-          <option value="monthly">Mensual</option>
-        </select>
+        <div :class="['freq-select-wrap', selectedFrequency !== '' ? 'freq-select--active' : '']">
+          <BaseSelect
+            v-model="selectedFrequency"
+            :options="frecuenciaOpciones"
+            placeholder="Frecuencia"
+          />
+        </div>
       </div>
 
       <div class="mb-4 relative">
@@ -611,3 +607,50 @@ onMounted(() => {
   cargarTipos();
 });
 </script>
+
+<style scoped>
+/* ── Frecuencia select: mismo tamaño y nivel que btn-sm ── */
+.freq-select-wrap :deep(.cosmo-select-input) {
+  height: 2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  padding: 0 2rem 0 0.75rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  transition: all 0.2s;
+}
+.freq-select-wrap :deep(.cosmo-select-input:hover:not(:disabled)) {
+  background: var(--color-surface-soft);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+/* Cuando hay valor activo → gris oscuro elegante para diferenciarlo */
+.freq-select--active :deep(.cosmo-select-input) {
+  background: #1e293b !important;
+  border-color: #1e293b !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.freq-select--active :deep(.cosmo-select-chevron) {
+  color: rgba(255,255,255,0.8);
+}
+.freq-select--active :deep(.cosmo-select-placeholder) {
+  color: rgba(255,255,255,0.85);
+  opacity: 1;
+}
+
+/* Dark mode */
+:global(.dark) .freq-select-wrap :deep(.cosmo-select-input) {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+:global(.dark) .freq-select--active :deep(.cosmo-select-input) {
+  background: #475569 !important; /* slate-600 en dark mode */
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+</style>
