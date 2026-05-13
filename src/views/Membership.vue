@@ -344,7 +344,7 @@ const FREQUENCY_OPTIONS = [
 ];
 
 const frecuenciaOpciones = computed(() => [
-  { value: "", label: "Todas las frecuencias" },
+  { value: "", label: "Frecuencias" },
   ...FREQUENCY_OPTIONS,
 ]);
 
@@ -610,6 +610,9 @@ onMounted(() => {
 
 <style scoped>
 /* ── Frecuencia select: mismo tamaño y nivel que btn-sm ── */
+.freq-select-wrap {
+  min-width: 7.5rem; /* Evita que el botón se encoja mucho */
+}
 .freq-select-wrap :deep(.cosmo-select-input) {
   height: 2rem;
   font-size: 0.75rem;
@@ -625,6 +628,15 @@ onMounted(() => {
   background: var(--color-surface-soft);
   border-color: var(--color-border-strong);
   color: var(--color-text);
+}
+
+/* Evitar que la lista desplegable se aplaste */
+.freq-select-wrap :deep(.cosmo-select-list) {
+  width: max-content;
+  min-width: 100%;
+}
+.freq-select-wrap :deep(.cosmo-select-item) {
+  white-space: nowrap;
 }
 
 /* Cuando hay valor activo → gris oscuro elegante para diferenciarlo */
