@@ -257,7 +257,7 @@
     <MemberDetailModal
       :show="showDetailModal"
       :member-id="selectedDetailId"
-      @close="showDetailModal = false"
+      @close="cerrarDetalle"
     />
   </div>
 </template>
@@ -394,6 +394,9 @@ const handleMemberAssigned = async (member) => {
 const toggleDetalle = (id) => {
   if (detallesAbiertos.value.includes(id)) {
     detallesAbiertos.value = detallesAbiertos.value.filter((i) => i !== id);
+    if (selectedDetailId.value === id) {
+      cerrarDetalle();
+    }
   } else {
     detallesAbiertos.value.push(id);
   }
@@ -407,6 +410,11 @@ const abrirAsignar = (member) => {
 const abrirDetalle = (member) => {
   selectedDetailId.value = member.id;
   showDetailModal.value = true;
+};
+
+const cerrarDetalle = () => {
+  showDetailModal.value = false;
+  selectedDetailId.value = null;
 };
 
 const abrirPagar = (member) => {
