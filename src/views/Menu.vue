@@ -136,7 +136,14 @@ const greeting = computed(() => {
   return 'Buenas noches'
 })
 
-const today = computed(() => formatAppDate(new Date()))
+const today = computed(() => {
+  return new Intl.DateTimeFormat('es-ES', { 
+    weekday: 'long', 
+    day: 'numeric', 
+    month: 'long', 
+    year: 'numeric' 
+  }).format(new Date())
+})
 
 onMounted(async () => {
   try {
