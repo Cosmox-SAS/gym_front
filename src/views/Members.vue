@@ -135,22 +135,25 @@
                     </div>
                     <div class="text-primary-600 dark:text-primary-400 font-black text-[13px] mt-0.5">{{ formatPrice(member.memberships[0].plan?.price) }}</div>
                   </div>
+                  
+                  <div class="text-right shrink-0">
+                    <span class="member-info-label">Restantes</span>
+                    <div class="mt-1">
+                      <strong class="text-[14px]" :class="membershipDaysClass(member)">
+                        {{ membershipDaysText(member) }}
+                      </strong>
+                    </div>
+                  </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-2">
-                  <div>
+                <div class="grid grid-cols-2 text-center divide-x divide-slate-200 dark:divide-slate-700">
+                  <div class="pr-2">
                     <span class="member-info-label">Inicio</span>
                     <span class="text-[12px] font-semibold text-default block mt-0.5">{{ formatAppDate(member.memberships[0].start_date) }}</span>
                   </div>
-                  <div>
+                  <div class="pl-2">
                     <span class="member-info-label">Fin</span>
                     <span class="text-[12px] font-semibold text-default block mt-0.5">{{ formatAppDate(member.memberships[0].end_date) }}</span>
-                  </div>
-                  <div>
-                    <span class="member-info-label">Restantes</span>
-                    <strong class="text-[12px] block mt-0.5" :class="membershipDaysClass(member)">
-                      {{ membershipDaysText(member) }}
-                    </strong>
                   </div>
                 </div>
               </div>

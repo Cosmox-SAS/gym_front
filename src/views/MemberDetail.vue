@@ -48,8 +48,14 @@
 
           <div class="relative px-6 sm:px-10 pb-6 -mt-14">
             <div class="flex flex-col sm:flex-row sm:items-end gap-4">
-              <div class="w-24 h-24 rounded-2xl bg-[var(--color-surface)] p-1 shadow-lg shrink-0">
-                <div class="w-full h-full rounded-xl flex items-center justify-center text-3xl font-black text-white bg-gradient-to-br from-primary-500 to-indigo-600">
+              <div class="w-24 h-32 rounded-2xl bg-[var(--color-surface)] p-1 shadow-lg shrink-0">
+                <img
+                  v-if="primaryPhoto"
+                  :src="primaryPhoto"
+                  class="w-full h-full rounded-xl object-cover"
+                  :alt="`Foto de ${member.name}`"
+                />
+                <div v-else class="w-full h-full rounded-xl flex items-center justify-center text-3xl font-black text-white bg-gradient-to-br from-primary-500 to-indigo-600">
                   {{ (member.name || "?").charAt(0).toUpperCase() }}
                 </div>
               </div>
@@ -273,6 +279,13 @@ onMounted(async () => {
 const edad = computed(() => {
   if (!member.value?.birth_date) return "—";
   return dayjs().diff(dayjs(member.value.birth_date), "year");
+});
+
+const primaryPhoto = computed(() => {
+  if (!member.value?.photos?.length) return null;
+  const p = member.value.photos.find((ph) => ph.type === "primary");
+  if (p) return p.url;
+  return member.value.photos[0].url;
 });
 
 const imc = computed(() => {
