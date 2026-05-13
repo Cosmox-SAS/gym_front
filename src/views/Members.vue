@@ -567,7 +567,7 @@ function membershipDaysClass(member) {
 }
 
 .member-avatar-wrap {
-  width: 3.75rem;
+  width: 4.75rem;
   height: 5rem;
   border-radius: 0.8rem;
   overflow: hidden;
