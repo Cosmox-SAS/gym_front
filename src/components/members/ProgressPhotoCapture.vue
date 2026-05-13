@@ -71,7 +71,7 @@
           />
         </div>
         <p v-if="uploadingIndex === i" class="photo-feedback photo-feedback-info">
-          Subiendo foto...
+          Preparando foto...
         </p>
         <p v-if="slotErrors[i]" class="photo-feedback photo-feedback-error">
           {{ slotErrors[i] }}
@@ -138,7 +138,6 @@
 
 <script setup>
 import { ref, computed, nextTick, onBeforeUnmount } from "vue";
-import api from "@/axios";
 
 const props = defineProps({
   modelValue: {
@@ -167,8 +166,14 @@ const labels = computed(() => props.labels);
 function normalizeEntry(value) {
   if (!value) return null;
   if (typeof value === "string") return { photo: value, taken_at: null };
-  if (typeof value === "object" && value.photo) {
-    return { photo: value.photo, taken_at: value.taken_at || null };
+  if (typeof value === "object" && (value.photo || value.path || value.file)) {
+    return {
+      photo: value.photo || "",
+      path: value.path || "",
+      taken_at: value.taken_at || null,
+      file: value.file || null,
+      pending: !!value.pending,
+    };
   }
   return null;
 }
@@ -178,18 +183,25 @@ const photos = computed(() => {
   return labels.value.map((_, i) => normalizeEntry(v[i]));
 });
 
-function setPhoto(index, dataUrl) {
+function setPhoto(index, data) {
   const next = [...photos.value];
-  next[index] = dataUrl
+  next[index] = data
     ? {
-        photo: typeof dataUrl === "string" ? dataUrl : dataUrl.photo,
-        taken_at: typeof dataUrl === "string" ? new Date().toISOString() : dataUrl.taken_at,
+        photo: typeof data === "string" ? data : data.photo,
+        path: typeof data === "string" ? "" : data.path || "",
+        taken_at: typeof data === "string" ? new Date().toISOString() : data.taken_at,
+        file: typeof data === "string" ? null : data.file || null,
+        pending: typeof data === "string" ? false : !!data.pending,
       }
     : null;
   emit("update:modelValue", next);
 }
 
 function removePhoto(index) {
+  const previous = photos.value[index];
+  if (previous?.pending && previous.photo?.startsWith("blob:")) {
+    URL.revokeObjectURL(previous.photo);
+  }
   setPhoto(index, null);
 }
 
@@ -231,7 +243,7 @@ async function onFileSelected(event, index) {
     event.target.value = "";
     return;
   }
-  await uploadPhoto(index, file);
+  setPendingPhoto(index, file);
   event.target.value = "";
 }
 
@@ -257,47 +269,27 @@ function clearMessages(index) {
   globalSuccessMessage.value = "";
 }
 
-function resolveUploadContext() {
-  const hasMemberId = props.memberId !== null && props.memberId !== undefined && props.memberId !== "";
-  const hasIdentification = !!(props.identification || "").trim();
-
-  if (hasMemberId) {
-    return { member_id: String(props.memberId) };
-  }
-
-  if (hasIdentification) {
-    return { identification: (props.identification || "").trim() };
-  }
-
-  return null;
-}
-
-async function uploadPhoto(index, file) {
+function setPendingPhoto(index, file) {
   uploadingIndex.value = index;
 
   try {
-    const context = resolveUploadContext();
-    if (!context) {
-      slotErrors.value[index] = "Ingresa la identificacion o guarda el cliente primero.";
-      return;
+    const previewUrl = URL.createObjectURL(file);
+    const previous = photos.value[index];
+    if (previous?.pending && previous.photo?.startsWith("blob:")) {
+      URL.revokeObjectURL(previous.photo);
     }
 
-    const form = new FormData();
-    form.append("photo", file);
-    Object.entries(context).forEach(([key, value]) => form.append(key, value));
-
-    const { data } = await api.post("/members/photos/upload", form, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-
     setPhoto(index, {
-      photo: data.url,
-      taken_at: data.taken_at || new Date().toISOString(),
+      photo: previewUrl,
+      path: "",
+      file,
+      pending: true,
+      taken_at: new Date().toISOString(),
     });
-    slotSuccess.value[index] = "Foto subida con exito.";
-    globalSuccessMessage.value = "Imagen cargada correctamente. Guarda el cliente para persistir.";
+    slotSuccess.value[index] = "Foto lista. Se subira al guardar.";
+    globalSuccessMessage.value = "Las fotos se subiran cuando guardes el cliente.";
   } catch {
-    slotErrors.value[index] = "No se pudo subir la foto. Intenta nuevamente.";
+    slotErrors.value[index] = "No se pudo preparar la foto. Intenta nuevamente.";
   } finally {
     uploadingIndex.value = null;
   }
@@ -374,11 +366,18 @@ function capturePhoto() {
     const file = new File([blob], `captura-${Date.now()}.jpg`, { type: "image/jpeg" });
     const index = cameraIndex.value;
     closeCamera();
-    await uploadPhoto(index, file);
+    setPendingPhoto(index, file);
   }, "image/jpeg", 0.85);
 }
 
-onBeforeUnmount(stopStream);
+onBeforeUnmount(() => {
+  stopStream();
+  photos.value.forEach((photo) => {
+    if (photo?.pending && photo.photo?.startsWith("blob:")) {
+      URL.revokeObjectURL(photo.photo);
+    }
+  });
+});
 </script>
 
 <style scoped>

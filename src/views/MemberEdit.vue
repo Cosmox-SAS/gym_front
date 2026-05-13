@@ -215,6 +215,7 @@ import FingerprintEnroll from "@/components/FingerprintEnroll.vue";
 import ProgressPhotoCapture from "@/components/members/ProgressPhotoCapture.vue";
 import { BaseInput, BaseSelect, BaseButton } from "@/components/ui";
 import { SWAL_COLORS } from "@/lib/colors";
+import { uploadPendingMemberPhotos } from "@/lib/memberPhotos";
 
 const route = useRoute();
 const router = useRouter();
@@ -278,9 +279,11 @@ const updateMember = async () => {
   errors.value = {};
 
   try {
+    const uploadedPhotos = await uploadPendingMemberPhotos(memberId, initialPhotos.value);
+
     await api.put(`/members/${memberId}`, {
       ...form,
-      initial_photos: initialPhotos.value,
+      initial_photos: uploadedPhotos,
     });
 
     await Swal.fire({

@@ -85,6 +85,7 @@
                 Estado: {{ member.memberships?.length ? traducirEstado(memberStatus(member)) : "Sin plan" }}
               </p>
               <button
+                v-if="false"
                 @click="toggleDetalle(member.id)"
                 class="text-xs font-bold px-3 py-1 rounded-full border transition-all h-8 flex items-center select-none"
                 :class="
