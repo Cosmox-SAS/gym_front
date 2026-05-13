@@ -86,6 +86,14 @@
           required
         />
 
+        <BaseSelect
+          v-model="nuevoPlan.frequency"
+          label="Frecuencia"
+          placeholder="Seleccione frecuencia"
+          :options="FREQUENCY_OPTIONS"
+          required
+        />
+
         <BaseInput
           v-model="nuevoPlan.price"
           label="Precio"
@@ -225,15 +233,7 @@ const cargarTipos = async () => {
 };
 
 const abrirModalCrear = () => {
-  if (!selectedFrequency.value) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Falta información',
-      text: 'Debes seleccionar una "Frecuencia" (Diario, Semanal...) en el filtro superior para crearle un plan.'
-    });
-    return;
-  }
-  nuevoPlan.value.frequency = selectedFrequency.value;
+  nuevoPlan.value = { membership_type_id: "", frequency: "", price: "" };
   openModal.value = true;
 };
 
