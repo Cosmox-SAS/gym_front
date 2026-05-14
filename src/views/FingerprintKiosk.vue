@@ -64,6 +64,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useFingerprint } from '@/composables/useFingerprint'
+import { formatAppDateTime } from '@/lib/dates'
 import {
   DoorOpen,
   Fingerprint,
@@ -160,9 +161,7 @@ async function startIdentify() {
         // Acceso permitido — registrar fecha/hora y continuar
         state.value      = 'success'
         member.value     = ev.member
-        accessTime.value = new Date().toLocaleString('es-CO', {
-          dateStyle: 'short', timeStyle: 'short'
-        })
+        accessTime.value = formatAppDateTime(new Date())
         scheduleReset(RESET_DELAY)
         return
 

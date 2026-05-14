@@ -9,7 +9,7 @@
           <p class="page-subtitle">{{ tituloFiltro }}</p>
         </div>
         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-          <router-link to="/Menu" class="btn btn-secondary flex-1 sm:flex-none inline-flex items-center justify-center gap-2">
+          <router-link to="/Menu" class="btn btn-dark flex-1 sm:flex-none inline-flex items-center justify-center gap-2">
             <Home class="w-4 h-4" aria-hidden="true" />
             <span>Inicio</span>
           </router-link>
@@ -20,7 +20,7 @@
         </div>
       </div>
 
-      <div class="flex overflow-x-auto pb-2 gap-2 mb-4 scrollbar-hide">
+      <div class="flex flex-wrap items-center gap-2 mb-4">
         <button
           @click="filtrarMembresias('')"
           class="btn btn-sm whitespace-nowrap"
@@ -49,6 +49,14 @@
         >
           Vencen Pronto
         </button>
+
+        <div :class="['freq-select-wrap', selectedFrequency !== '' ? 'freq-select--active' : '']">
+          <BaseSelect
+            v-model="selectedFrequency"
+            :options="frecuenciaOpciones"
+            placeholder="Frecuencia"
+          />
+        </div>
       </div>
 
       <div class="mb-4 relative">
@@ -242,31 +250,18 @@
         <div class="w-full max-w-md p-6 rounded-xl shadow-2xl" :style="{ background: 'var(--modal-panel-bg)', border: '1px solid var(--modal-panel-border)' }">
           <h2 id="membership-assign-modal-title" class="font-bold text-lg mb-4 border-b border-default-soft pb-2 flex items-center gap-2 text-default">
             <CalendarCheck2 class="w-5 h-5" aria-hidden="true" />
-            {{ form.member_id ? "Asignar membresía a " + busqueda : "Asignar Nueva" }}
+            Asignar / Renovar Membresía
           </h2>
           <form @submit.prevent="asignarMembresia" class="space-y-4">
-            <!-- Solo mostrar búsqueda si NO hay member_id pre-seleccionado -->
-            <div v-if="!form.member_id">
+            <div>
               <label class="text-xs font-bold uppercase text-subtle">Buscar Cliente</label>
-              <input
-                v-model="busqueda"
-                type="text"
-                placeholder="Nombre..."
-                class="field-input"
+              <BaseSelect
+                v-model="form.member_id"
+                :options="memberOptions"
+                placeholder="Nombre del cliente..."
+                searchable
+                empty-text="No se encontraron clientes"
               />
-              <ul
-                v-if="miembrosFiltrados.length"
-                class="border border-default-soft rounded-lg mt-1 max-h-32 overflow-y-auto bg-[var(--color-surface)] absolute w-64 z-10 shadow-lg"
-              >
-                <li
-                  v-for="m in miembrosFiltrados"
-                  :key="m.id"
-                  @click="seleccionarMiembro(m)"
-                  class="p-2 hover:bg-[var(--color-surface-soft)] cursor-pointer text-sm border-b border-default-soft"
-                >
-                  {{ m.name }}
-                </li>
-              </ul>
             </div>
 
             <div>
@@ -303,6 +298,7 @@ import { useRoute } from "vue-router";
 import api from "@/axios";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import { formatAppDate } from "@/lib/dates";
 
 dayjs.extend(utc);
 import Swal from "sweetalert2";
@@ -336,6 +332,26 @@ const tituloFiltro = ref("Activas y Vencidas");
 const form = ref({ member_id: "", plan_id: "", end_date: "", status: "inactive_unpaid" });
 const busqueda = ref("");
 const miembroSeleccionado = ref(false);
+const selectedFrequency = ref("");
+const selectedType = ref("");
+const tipos = ref([]);
+
+const FREQUENCY_OPTIONS = [
+  { value: "daily", label: "Diario" },
+  { value: "weekly", label: "Semanal" },
+  { value: "biweekly", label: "Quincenal" },
+  { value: "monthly", label: "Mensual" },
+];
+
+const frecuenciaOpciones = computed(() => [
+  { value: "", label: "Frecuencias" },
+  ...FREQUENCY_OPTIONS,
+]);
+
+const tipoOpciones = computed(() => [
+  { value: "", label: "Todos los tipos" },
+  ...tipos.value.map((t) => ({ value: t.id, label: t.name })),
+]);
 
 // Paginación
 const currentPage = ref(1);
@@ -351,15 +367,9 @@ const paginasVisibles = computed(() => {
   return pages;
 });
 
-// Búsqueda en modal de asignar (solo local)
-const miembrosFiltrados = computed(() => {
-  const term = busqueda.value.toLowerCase();
-  return term
-    ? miembros.value.filter(
-        (m) => m.name.toLowerCase().includes(term) || (m.email || "").toLowerCase().includes(term),
-      )
-    : [];
-});
+const memberOptions = computed(() =>
+  miembros.value.map((m) => ({ value: m.id, label: m.name }))
+);
 
 // Watcher para búsqueda server-side con debounce
 let searchTimeout = null;
@@ -371,6 +381,25 @@ watch(busquedaMembresia, () => {
   }, 350);
 });
 
+watch(selectedFrequency, () => {
+  currentPage.value = 1;
+  cargarMembresias();
+});
+
+watch(selectedType, () => {
+  currentPage.value = 1;
+  cargarMembresias();
+});
+
+const cargarTipos = async () => {
+  try {
+    const { data } = await api.get("/membershipType");
+    tipos.value = data;
+  } catch (e) {
+    console.error(e);
+  }
+};
+
 // Cargas de Datos
 const cargarMembresias = async () => {
   loading.value = true;
@@ -378,6 +407,8 @@ const cargarMembresias = async () => {
     const params = new URLSearchParams();
     if (statusFilter.value) params.append("status", statusFilter.value);
     if (busquedaMembresia.value) params.append("search", busquedaMembresia.value);
+    if (selectedFrequency.value) params.append("frequency", selectedFrequency.value);
+    if (selectedType.value) params.append("membership_type_id", selectedType.value);
     params.append("page", currentPage.value);
     const { data } = await api.get(`/memberships?${params.toString()}`);
     membresias.value = data.data;
@@ -435,17 +466,10 @@ const filtrarMembresias = (status) => {
   cargarMembresias();
 };
 
-// Acciones Modales
-const seleccionarMiembro = (miembro) => {
-  form.value.member_id = miembro.id;
-  busqueda.value = miembro.name;
-  // Ocultar resultados al seleccionar
-  miembroSeleccionado.value = true;
-};
 const cerrarModal = () => {
   showModal.value = false;
   busqueda.value = "";
-  form.value = { member_id: "", plan_id: "", status: "inactive_unpaid" }; // Cambiado de "active" a "inactive_unpaid"
+  form.value = { member_id: "", plan_id: "", status: "inactive_unpaid" };
   miembroSeleccionado.value = false;
 };
 
@@ -480,9 +504,8 @@ const asignarMembresia = async () => {
 };
 
 const abrirRenovacion = (m) => {
-  // Usamos la misma lógica que "seleccionarMiembro" pero pre-llenamos desde la fila
   if (m.member) {
-    seleccionarMiembro(m.member);
+    form.value.member_id = m.member.id;
     showModal.value = true;
     miembroSeleccionado.value = true;
   }
@@ -530,7 +553,7 @@ const guardarCambios = async () => {
 };
 
 // Utilidades
-const formatDate = (d) => dayjs(d).format("DD/MM/YY");
+const formatDate = (d) => formatAppDate(d);
 const formatCurrency = (v) =>
   new Intl.NumberFormat("es-CO", {
     style: "currency",
@@ -581,5 +604,65 @@ onMounted(() => {
   else cargarMembresias();
   cargarMiembros();
   cargarPlanes();
+  cargarTipos();
 });
 </script>
+
+<style scoped>
+/* ── Frecuencia select: mismo tamaño y nivel que btn-sm ── */
+.freq-select-wrap {
+  min-width: 7.5rem; /* Evita que el botón se encoja mucho */
+}
+.freq-select-wrap :deep(.cosmo-select-input) {
+  height: 2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  padding: 0 2rem 0 0.75rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  transition: all 0.2s;
+}
+.freq-select-wrap :deep(.cosmo-select-input:hover:not(:disabled)) {
+  background: var(--color-surface-soft);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+/* Evitar que la lista desplegable se aplaste */
+.freq-select-wrap :deep(.cosmo-select-list) {
+  width: max-content;
+  min-width: 100%;
+}
+.freq-select-wrap :deep(.cosmo-select-item) {
+  white-space: nowrap;
+}
+
+/* Cuando hay valor activo → gris oscuro elegante para diferenciarlo */
+.freq-select--active :deep(.cosmo-select-input) {
+  background: #1e293b !important;
+  border-color: #1e293b !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.freq-select--active :deep(.cosmo-select-chevron) {
+  color: rgba(255,255,255,0.8);
+}
+.freq-select--active :deep(.cosmo-select-placeholder) {
+  color: rgba(255,255,255,0.85);
+  opacity: 1;
+}
+
+/* Dark mode */
+:global(.dark) .freq-select-wrap :deep(.cosmo-select-input) {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+:global(.dark) .freq-select--active :deep(.cosmo-select-input) {
+  background: #475569 !important; /* slate-600 en dark mode */
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+</style>

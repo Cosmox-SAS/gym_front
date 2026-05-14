@@ -9,7 +9,7 @@
           <p class="page-subtitle">Consulta y registra pagos</p>
         </div>
         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-          <router-link to="/Menu" class="btn btn-secondary flex-1 sm:flex-none inline-flex items-center justify-center gap-2">
+          <router-link to="/Menu" class="btn btn-dark flex-1 sm:flex-none inline-flex items-center justify-center gap-2">
             <Home class="w-4 h-4" aria-hidden="true" />
             <span>Inicio</span>
           </router-link>
@@ -208,6 +208,7 @@ import { ref, computed, onMounted } from "vue";
 import api from "@/axios";
 import dayjs from "dayjs";
 import Swal from "sweetalert2";
+import { formatAppDateTime } from "@/lib/dates";
 import {
   Home,
   Plus,
@@ -477,7 +478,7 @@ const formatCurrency = (val) =>
     currency: "COP",
     maximumFractionDigits: 0,
   }).format(val);
-const formatDate = (dateStr) => new Date(dateStr).toLocaleString("es-CO");
+const formatDate = (dateStr) => formatAppDateTime(dateStr);
 
 onMounted(() => {
   cargarHistorial();

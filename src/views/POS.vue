@@ -78,7 +78,12 @@
             Ticket
             <span class="badge badge-blue text-xs px-2 py-0.5 rounded-full">{{ cart.length }} items</span>
           </h3>
-          <button @click="cart = []" v-if="cart.length > 0" class="text-xs text-red-400 hover:text-red-300 hover:underline cursor-pointer inline-flex items-center gap-1">
+          <button
+            v-if="cart.length > 0"
+            type="button"
+            @click="cart = []"
+            class="btn btn-danger btn-sm"
+          >
             <Trash2 class="w-3.5 h-3.5" aria-hidden="true" />
             Vaciar
           </button>

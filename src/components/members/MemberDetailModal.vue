@@ -42,10 +42,16 @@
           </div>
 
           <!-- Avatar overlap -->
-          <div class="relative px-6 sm:px-10 -mt-14 pb-5">
+          <div class="relative px-6 sm:px-10 -mt-10 pb-5">
             <div class="flex flex-col sm:flex-row sm:items-end gap-4">
-              <div class="w-20 h-20 rounded-2xl bg-[var(--color-surface)] p-1 shadow-lg shrink-0">
-                <div class="w-full h-full rounded-xl flex items-center justify-center text-2xl font-black text-white bg-gradient-to-br from-primary-500 to-indigo-600">
+              <div class="detail-avatar-wrap">
+                <img
+                  v-if="primaryPhoto"
+                  :src="primaryPhoto"
+                  class="detail-avatar-img"
+                  :alt="`Foto de ${member?.name}`"
+                />
+                <div v-else class="detail-avatar-img detail-avatar-fallback">
                   {{ (member?.name || "?").charAt(0).toUpperCase() }}
                 </div>
               </div>
@@ -53,7 +59,7 @@
                 <h1 class="text-xl sm:text-2xl font-bold text-default tracking-tight truncate">
                   {{ member?.name || "—" }}
                 </h1>
-                <div class="flex flex-wrap items-center gap-x-3 gap-y-2 mt-10 divide-chips">
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-2 mt-5 divide-chips">
                   <BaseBadge v-if="member?.memberships?.length" :color="statusColor(member.memberships[0].status)">
                     {{ traducirEstado(member.memberships[0].status) }}
                   </BaseBadge>
@@ -161,7 +167,7 @@
                     </div>
                     <div class="info-item">
                       <dt class="info-label">Fecha de nacimiento</dt>
-                      <dd class="info-val">{{ member.birth_date || "—" }}</dd>
+                      <dd class="info-val">{{ formatAppDate(member.birth_date) }}</dd>
                     </div>
                     <div class="info-item">
                       <dt class="info-label">Sexo</dt>
@@ -169,56 +175,58 @@
                     </div>
                   </dl>
 
-                  <!-- ===== Tarjeta de membresía (horizontal) ===== -->
-                  <div class="mt-6 pt-5 border-t border-default-soft">
-                    <div class="section-header">
-                      <span class="section-bar bg-indigo-500" />
-                      <h2 class="section-title" style="color: var(--color-text-muted);">Membresía</h2>
-                    </div>
+                </div>
 
-                    <div v-if="member.memberships?.length" class="membership-row">
-                      <div class="membership-cell membership-cell--plan">
-                        <p class="info-label !mb-1">Plan Actual</p>
-                        <p class="text-base font-bold capitalize" style="color: var(--color-text);">
-                          {{ traducirFrecuencia(member.memberships[0].plan?.frequency) }}
-                        </p>
-                        <p class="text-lg font-black mt-0.5" style="color: #60a5fa;">
-                          {{ formatPrice(member.memberships[0].plan?.price) }}
-                        </p>
-                      </div>
-                      <div class="membership-cell">
-                        <p class="info-label !mb-1">Estado</p>
-                        <BaseBadge :color="statusColor(member.memberships[0].status)">
-                          {{ traducirEstado(member.memberships[0].status) }}
-                        </BaseBadge>
-                      </div>
-                      <div class="membership-cell">
-                        <p class="info-label !mb-1">Inicio</p>
-                        <p class="info-val">{{ member.memberships[0].start_date }}</p>
-                      </div>
-                      <div class="membership-cell">
-                        <p class="info-label !mb-1">Fin</p>
-                        <p class="info-val">{{ member.memberships[0].end_date }}</p>
-                      </div>
-                      <div v-if="diasRestantes !== null" class="membership-cell">
-                        <p class="info-label !mb-1">Días restantes</p>
-                        <p class="font-bold text-sm" :class="diasRestantesCls">
-                          {{ diasRestantes < 0 ? `Vencida hace ${Math.abs(diasRestantes)}d` : `${diasRestantes} días` }}
-                        </p>
-                      </div>
-                    </div>
+                <div class="detail-card">
+                  <div class="section-header">
+                    <span class="section-bar bg-success-600" />
+                    <h2 class="section-title" style="color: var(--color-text-muted);">Fotos Iniciales</h2>
+                  </div>
 
-                    <div v-else class="flex items-center gap-3 bg-[var(--color-surface-soft)] border border-default-soft rounded-xl p-4">
-                      <div class="w-10 h-10 rounded-full bg-[var(--color-overlay)] flex items-center justify-center shrink-0">
-                        <svg class="w-5 h-5 text-subtle" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                        </svg>
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div
+                      v-for="(label, i) in initialPhotoLabels"
+                      :key="i"
+                      class="flex flex-col gap-2 items-center"
+                    >
+                      <!-- Etiqueta superior (Diseño cápsula de editar) -->
+                      <span class="px-3 py-1 rounded-full bg-gray-800/70 text-white text-[10px] font-bold uppercase tracking-widest shadow-sm">
+                        {{ label }}
+                      </span>
+
+                      <!-- Marco de la foto -->
+                      <div class="progress-photo-slot w-full">
+                        <img
+                          v-if="initialPhotos[i]?.photo"
+                          :src="initialPhotos[i].photo"
+                          :alt="`Foto inicial ${label}`"
+                          class="progress-photo-img"
+                        />
+                        <div v-else class="progress-photo-empty">
+                          <svg class="w-7 h-7 opacity-50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span class="text-[10px] text-subtle mt-1.5 uppercase font-bold">Sin foto</span>
+                        </div>
                       </div>
-                      <p class="text-sm text-muted">Sin membresía asignada</p>
+
+                      <!-- Fecha inferior (Diseño cápsula de editar) -->
+                      <div class="h-6 flex items-center justify-center">
+                        <span v-if="initialPhotos[i]?.taken_at" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-800/70 text-white text-[11px] font-semibold shadow-sm">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          {{ formatDate(initialPhotos[i].taken_at) }}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
+              </div>
+
+              <!-- ===== Columna Secundaria ===== -->
+              <div class="space-y-5">
                 <div class="detail-card">
                   <div class="section-header">
                     <span class="section-bar bg-amber-500" />
@@ -233,43 +241,6 @@
                   <p v-else class="text-sm italic text-subtle">
                     Sin objetivos / observaciones registrados.
                   </p>
-                </div>
-
-              </div>
-
-              <!-- ===== Fotos Iniciales (frente, perfil, espalda) ===== -->
-              <div class="space-y-5">
-                <div class="detail-card">
-                  <div class="section-header">
-                    <span class="section-bar bg-success-600" />
-                    <h2 class="section-title" style="color: var(--color-text-muted);">Fotos Iniciales</h2>
-                  </div>
-
-                  <div class="space-y-3">
-                    <div
-                      v-for="(label, i) in initialPhotoLabels"
-                      :key="i"
-                      class="progress-photo-slot"
-                    >
-                      <img
-                        v-if="initialPhotos[i]?.photo"
-                        :src="initialPhotos[i].photo"
-                        :alt="`Foto inicial ${label}`"
-                        class="progress-photo-img"
-                      />
-                      <div v-else class="progress-photo-empty">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span class="text-[11px] font-bold uppercase tracking-wider mt-1.5">{{ label }}</span>
-                        <span class="text-[10px] text-subtle mt-0.5">Sin foto</span>
-                      </div>
-                      <span class="progress-photo-tag">{{ label }}</span>
-                      <span v-if="initialPhotos[i]?.taken_at" class="progress-photo-date">
-                        {{ formatDate(initialPhotos[i].taken_at) }}
-                      </span>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -286,9 +257,9 @@ import api from "@/axios";
 import dayjs from "dayjs";
 import Swal from "sweetalert2";
 import { BaseBadge } from "@/components/ui";
+import { formatAppDate } from "@/lib/dates";
 import {
   Activity,
-  CalendarX2,
   Cake,
   FileText,
   IdCard,
@@ -354,12 +325,6 @@ const imc = computed(() => {
 
 const clasificacionIMC = computed(() => clasificarIMC(imc.value));
 
-const diasRestantes = computed(() => {
-  const end = member.value?.memberships?.[0]?.end_date;
-  if (!end) return null;
-  return dayjs(end).diff(dayjs(), "day");
-});
-
 const initialPhotoLabels = ["Frente", "Perfil", "Espalda"];
 
 function normalizePhotoEntry(value) {
@@ -377,19 +342,13 @@ const initialPhotos = computed(() => {
   return [normalizePhotoEntry(raw[0]), normalizePhotoEntry(raw[1]), normalizePhotoEntry(raw[2])];
 });
 
-function formatDate(iso) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" });
-}
-
-const diasRestantesCls = computed(() => {
-  if (diasRestantes.value === null) return "";
-  if (diasRestantes.value < 0) return "text-danger-600";
-  if (diasRestantes.value <= 7) return "text-amber-600";
-  return "text-success-700";
+const primaryPhoto = computed(() => {
+  return initialPhotos.value.find(p => p?.photo)?.photo || "";
 });
+
+function formatDate(iso) {
+  return formatAppDate(iso, "");
+}
 
 const imcIconCls = computed(() => {
   const cls = clasificacionIMC.value;
@@ -412,15 +371,6 @@ function formatEstatura(estatura) {
   if (!estatura) return "—";
   const metros = estatura > 3 ? (estatura / 100).toFixed(2) : estatura;
   return `${metros} m`;
-}
-
-function formatPrice(price) {
-  if (price == null) return "—";
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    maximumFractionDigits: 0,
-  }).format(price);
 }
 
 function formatearTelefono(numero) {
@@ -447,11 +397,6 @@ function clasificarIMC(v) {
   if (n < 35) return "Obesidad grado I";
   if (n < 40) return "Obesidad grado II";
   return "Obesidad grado III";
-}
-
-function traducirFrecuencia(f) {
-  const map = { daily: "Diaria", weekly: "Semanal", biweekly: "Quincenal", monthly: "Mensual", quarterly: "Trimestral", yearly: "Anual" };
-  return map[f] || f || "—";
 }
 
 function traducirEstado(estado) {
@@ -514,6 +459,41 @@ function traducirEstado(estado) {
 }
 .btn-icon-white:hover { background: rgba(255,255,255,0.2); }
 
+.detail-avatar-wrap {
+  width: 4.75rem;
+  height: 5rem;
+  border-radius: 0.8rem;
+  overflow: hidden;
+  flex-shrink: 0;
+  padding: 0.25rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: none;
+}
+
+.detail-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 0.6rem;
+  object-fit: cover;
+  display: block;
+}
+
+.detail-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6366f1;
+  background: rgba(99, 102, 241, 0.14);
+  font-size: 1rem;
+  font-weight: 850;
+}
+
+:global(.dark) .detail-avatar-fallback {
+  color: #c7d2fe;
+  background: rgba(99, 102, 241, 0.2);
+}
+
 .meta-chip {
   display: inline-flex; align-items: center; gap: 0.25rem;
   font-size: 0.75rem; color: var(--color-text-muted);
@@ -554,49 +534,6 @@ function traducirEstado(estado) {
   border-color: rgba(255, 255, 255, 0.10);
 }
 
-.membership-plan-card {
-  border-radius: 0.75rem;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  background: rgba(99, 102, 241, 0.06);
-  border: 1px solid rgba(99, 102, 241, 0.15);
-}
-:global(.dark) .membership-plan-card {
-  background: rgba(99, 102, 241, 0.10);
-  border-color: rgba(99, 102, 241, 0.25);
-}
-
-/* ===== Fila horizontal de membresía ===== */
-.membership-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem 1rem;
-  background: rgba(99, 102, 241, 0.06);
-  border: 1px solid rgba(99, 102, 241, 0.15);
-  border-radius: 0.75rem;
-  padding: 1rem 1.125rem;
-}
-@media (min-width: 640px) {
-  .membership-row { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-}
-:global(.dark) .membership-row {
-  background: rgba(99, 102, 241, 0.10);
-  border-color: rgba(99, 102, 241, 0.25);
-}
-
-.membership-cell {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  min-width: 0;
-}
-.membership-cell--plan {
-  grid-column: span 2 / span 2;
-}
-@media (min-width: 640px) {
-  .membership-cell--plan { grid-column: span 1 / span 1; }
-}
-
 /* ===== Fotos de progreso ===== */
 .progress-photo-slot {
   position: relative;
@@ -628,35 +565,7 @@ function traducirEstado(estado) {
   color: var(--color-text-subtle);
 }
 
-.progress-photo-tag {
-  position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  font-size: 0.625rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: white;
-  background: rgba(0, 0, 0, 0.55);
-  padding: 0.2rem 0.55rem;
-  border-radius: 9999px;
-  backdrop-filter: blur(4px);
-}
 
-.progress-photo-date {
-  position: absolute;
-  bottom: 0.5rem;
-  left: 0.5rem;
-  right: 0.5rem;
-  text-align: center;
-  font-size: 0.625rem;
-  font-weight: 600;
-  color: white;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 0.2rem 0.4rem;
-  border-radius: 9999px;
-  backdrop-filter: blur(4px);
-}
 
 .info-label {
   display: block; font-size: 0.625rem; font-weight: 700;

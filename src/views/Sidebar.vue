@@ -39,7 +39,7 @@
           <ClipboardList class="w-4 h-4" aria-hidden="true" />
           Planes
         </router-link>
-        <router-link @click="toggle" to="/configuracion" class="hover:text-blue-600 inline-flex items-center gap-2">
+        <router-link @click="toggle" to="/configuration" class="hover:text-blue-600 inline-flex items-center gap-2">
           <Settings class="w-4 h-4" aria-hidden="true" />
           Configuración
         </router-link>

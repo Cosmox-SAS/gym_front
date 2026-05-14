@@ -205,9 +205,7 @@ const procesarDatosIngresos = (historial, startDate) => {
   for (let i = 0; i < 7; i++) {
     const fechaObj = dayjs(startDate).add(i, "day");
     const fechaKey = fechaObj.format("YYYY-MM-DD");
-    const label = fechaObj
-      .toDate()
-      .toLocaleDateString("es-CO", { weekday: "short", day: "numeric" });
+    const label = fechaObj.format("DD/MM/YYYY");
 
     dias.push(label);
     montos.push(ingresosPorFecha[fechaKey] || 0);
@@ -253,9 +251,7 @@ const procesarVentasProductos = (sales, startDate) => {
   for (let i = 0; i < 7; i++) {
     const fechaObj = dayjs(startDate).add(i, "day");
     const fechaKey = fechaObj.format("YYYY-MM-DD");
-    const label = fechaObj
-      .toDate()
-      .toLocaleDateString("es-CO", { weekday: "short", day: "numeric" });
+    const label = fechaObj.format("DD/MM/YYYY");
 
     dias.push(label);
     montos.push(ventasPorFecha[fechaKey] || 0);

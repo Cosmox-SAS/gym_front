@@ -48,8 +48,14 @@
 
           <div class="relative px-6 sm:px-10 pb-6 -mt-14">
             <div class="flex flex-col sm:flex-row sm:items-end gap-4">
-              <div class="w-24 h-24 rounded-2xl bg-[var(--color-surface)] p-1 shadow-lg shrink-0">
-                <div class="w-full h-full rounded-xl flex items-center justify-center text-3xl font-black text-white bg-gradient-to-br from-primary-500 to-indigo-600">
+              <div class="w-24 h-32 rounded-2xl bg-[var(--color-surface)] p-1 shadow-lg shrink-0">
+                <img
+                  v-if="primaryPhoto"
+                  :src="primaryPhoto"
+                  class="w-full h-full rounded-xl object-cover"
+                  :alt="`Foto de ${member.name}`"
+                />
+                <div v-else class="w-full h-full rounded-xl flex items-center justify-center text-3xl font-black text-white bg-gradient-to-br from-primary-500 to-indigo-600">
                   {{ (member.name || "?").charAt(0).toUpperCase() }}
                 </div>
               </div>
@@ -149,7 +155,7 @@
                 </div>
                 <div>
                   <dt class="info-label">Fecha de nacimiento</dt>
-                  <dd class="info-val">{{ member.birth_date || "—" }}</dd>
+                  <dd class="info-val">{{ formatAppDate(member.birth_date) }}</dd>
                 </div>
                 <div>
                   <dt class="info-label">Sexo</dt>
@@ -202,11 +208,11 @@
                 </div>
                 <div class="flex items-center justify-between">
                   <span class="info-label">Inicio</span>
-                  <span class="info-val">{{ member.memberships[0].start_date }}</span>
+                  <span class="info-val">{{ formatAppDate(member.memberships[0].start_date) }}</span>
                 </div>
                 <div class="flex items-center justify-between">
                   <span class="info-label">Fin</span>
-                  <span class="info-val">{{ member.memberships[0].end_date }}</span>
+                  <span class="info-val">{{ formatAppDate(member.memberships[0].end_date) }}</span>
                 </div>
                 <div v-if="diasRestantes !== null" class="flex items-center justify-between">
                   <span class="info-label">Días restantes</span>
@@ -236,6 +242,7 @@ import { useRoute } from "vue-router";
 import api from "@/axios";
 import dayjs from "dayjs";
 import Swal from "sweetalert2";
+import { formatAppDate } from "@/lib/dates";
 import {
   Activity,
   ArrowLeft,
@@ -272,6 +279,13 @@ onMounted(async () => {
 const edad = computed(() => {
   if (!member.value?.birth_date) return "—";
   return dayjs().diff(dayjs(member.value.birth_date), "year");
+});
+
+const primaryPhoto = computed(() => {
+  if (!member.value?.photos?.length) return null;
+  const p = member.value.photos.find((ph) => ph.type === "primary");
+  if (p) return p.url;
+  return member.value.photos[0].url;
 });
 
 const imc = computed(() => {

@@ -104,6 +104,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/useAuthStore'
 import api from '@/axios'
 import Swal from 'sweetalert2'
+import { formatAppDate } from '@/lib/dates'
 import {
   UserCheck,
   AlertTriangle,
@@ -135,11 +136,14 @@ const greeting = computed(() => {
   return 'Buenas noches'
 })
 
-const today = computed(() =>
-  new Date().toLocaleDateString('es-CO', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-  })
-)
+const today = computed(() => {
+  return new Intl.DateTimeFormat('es-ES', { 
+    weekday: 'long', 
+    day: 'numeric', 
+    month: 'long', 
+    year: 'numeric' 
+  }).format(new Date())
+})
 
 onMounted(async () => {
   try {
@@ -161,6 +165,8 @@ onMounted(async () => {
 <style scoped>
 .marquee {
   overflow: hidden;
+  padding: 1rem 0;
+  margin: -1rem 0;
   mask-image: linear-gradient(to right, transparent 0, #000 4%, #000 96%, transparent 100%);
   -webkit-mask-image: linear-gradient(to right, transparent 0, #000 4%, #000 96%, transparent 100%);
 }

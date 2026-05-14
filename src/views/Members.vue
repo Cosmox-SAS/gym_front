@@ -37,7 +37,7 @@
         No hay Clientes registrados.
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
         <div
           v-for="member in miembrosPaginados"
           :key="member.id"
@@ -76,68 +76,35 @@
               </div>
               <div class="min-w-0">
                 <h2 class="text-base font-bold text-default truncate">{{ member.name }}</h2>
-                <p class="text-sm text-muted mt-0.5 truncate">{{ member.phone || "Sin teléfono" }}</p>
-                <p class="text-xs text-subtle mt-0.5">{{ member.birth_date || "Sin fecha de nacimiento" }}</p>
+                <p class="text-sm text-muted mt-0.5 truncate">{{ member.email || "Sin correo electrónico" }}</p>
+                <p class="text-xs text-subtle mt-0.5">{{ member.identification ? `C.C ${member.identification}` : "C.C —" }}</p>
               </div>
             </div>
-            <div class="flex flex-col items-end gap-2 shrink-0">
-              <p class="member-state-text" :class="`member-state-${statusColor(memberStatus(member))}`">
-                Estado: {{ member.memberships?.length ? traducirEstado(memberStatus(member)) : "Sin plan" }}
+            <div class="flex flex-col items-end justify-center gap-2 shrink-0 h-20">
+              <p class="text-xs font-bold" :class="`member-state-${membershipStatusColor(member.memberships?.[0]?.status)}`">
+                Estado: {{ member.memberships?.length ? traducirEstado(member.memberships[0].status) : "Sin plan" }}
               </p>
+
               <button
                 @click="toggleDetalle(member.id)"
-                class="text-xs font-bold px-3 py-1 rounded-full border transition-all h-8 flex items-center select-none"
+                class="text-xs font-bold px-3 py-1 rounded-full border transition-all h-8 inline-flex items-center gap-1 select-none"
                 :class="
-                  detallesAbiertos.includes(member.id)
+                  isDetalleAbierto(member.id)
                     ? 'detail-toggle-active'
                     : 'bg-[var(--color-overlay)] text-muted border-default-soft'
                 "
               >
-                {{ detallesAbiertos.includes(member.id) ? "Ocultar" : "Ver más" }}
+                <component :is="isDetalleAbierto(member.id) ? ChevronUp : ChevronDown" class="w-3.5 h-3.5" aria-hidden="true" />
+                <span>{{ isDetalleAbierto(member.id) ? "Ocultar" : "Ver más" }}</span>
               </button>
             </div>
-            <button
-              @click="toggleDetalle(member.id)"
-              class="text-xs font-bold px-3 py-1 rounded-full border transition-all h-8 inline-flex items-center gap-1 select-none"
-              :class="
-                detallesAbiertos.includes(member.id)
-                  ? 'detail-toggle-active'
-                  : 'bg-[var(--color-overlay)] text-muted border-default-soft'
-              "
-            >
-              <component :is="detallesAbiertos.includes(member.id) ? ChevronUp : ChevronDown" class="w-3.5 h-3.5" aria-hidden="true" />
-              <span>{{ detallesAbiertos.includes(member.id) ? "Ocultar" : "Ver más" }}</span>
-            </button>
           </div>
 
           <div
-            v-if="detallesAbiertos.includes(member.id)"
+            v-if="isDetalleAbierto(member.id)"
             class="member-card-detail"
           >
-            <div class="member-detail-photo-shell">
-              <img
-                v-if="getPrimaryPhoto(member)"
-                :src="getPrimaryPhoto(member)"
-                :alt="`Foto inicial de ${member.name}`"
-                class="member-detail-photo"
-              />
-              <div v-else class="member-detail-photo-empty">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>Sin foto inicial</span>
-              </div>
-            </div>
-
             <div class="member-info-list">
-              <div class="member-info-row">
-                <span class="member-info-label">Cédula / ID</span>
-                <span class="member-info-value">{{ member.identification || "—" }}</span>
-              </div>
-              <div class="member-info-row">
-                <span class="member-info-label">Email</span>
-                <span class="member-info-value">{{ member.email || "—" }}</span>
-              </div>
               <div class="member-info-row">
                 <span class="member-info-label">Peso</span>
                 <span class="member-info-value">{{ member.peso ?? "—" }} kg</span>
@@ -152,8 +119,52 @@
               </div>
             </div>
 
+            <div class="member-membership-block">
+              <div class="flex items-center gap-2 mb-2.5">
+                <span class="w-1 h-3.5 rounded-full bg-primary-600"></span>
+                <span class="text-[11px] font-bold uppercase tracking-[0.1em] text-muted">Membresía</span>
+              </div>
+
+              <div v-if="member.memberships?.length" class="member-membership-card">
+                <div class="member-membership-divider flex justify-between items-start mb-3 pb-3 border-b">
+                  <div class="min-w-0 pr-2">
+                    <span class="member-info-label">Plan actual</span>
+                    <div class="flex flex-wrap items-center gap-1.5 mt-1">
+                      <strong class="text-[13px] font-black text-default truncate">{{ membershipPlanType(member) }}</strong>
+                      <span class="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-400 shrink-0">{{ traducirFrecuencia(member.memberships[0].plan?.frequency) }}</span>
+                    </div>
+                    <div class="text-primary-600 dark:text-primary-400 font-black text-[13px] mt-0.5">{{ formatPrice(member.memberships[0].plan?.price) }}</div>
+                  </div>
+                  
+                  <div class="text-right shrink-0">
+                    <span class="member-info-label">Restantes</span>
+                    <div class="mt-1">
+                      <strong class="text-[14px]" :class="membershipDaysClass(member)">
+                        {{ membershipDaysText(member) }}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 text-center divide-x divide-slate-200 dark:divide-slate-700">
+                  <div class="pr-2">
+                    <span class="member-info-label">Inicio</span>
+                    <span class="text-[12px] font-semibold text-default block mt-0.5">{{ formatAppDate(member.memberships[0].start_date) }}</span>
+                  </div>
+                  <div class="pl-2">
+                    <span class="member-info-label">Fin</span>
+                    <span class="text-[12px] font-semibold text-default block mt-0.5">{{ formatAppDate(member.memberships[0].end_date) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div v-else class="member-membership-empty">
+                Sin membresía asignada
+              </div>
+            </div>
+
             <div class="member-notes">
-              {{ member.medical_history || "Sin antecedentes médicos" }}
+              {{ member.medical_history || "Objetivos / Observaciones" }}
             </div>
 
             <div class="pt-3 flex flex-wrap items-center gap-1.5">
@@ -246,7 +257,7 @@
     <MemberDetailModal
       :show="showDetailModal"
       :member-id="selectedDetailId"
-      @close="showDetailModal = false"
+      @close="cerrarDetalle"
     />
   </div>
 </template>
@@ -255,8 +266,10 @@
 import { ref, computed, watch, onMounted } from "vue";
 
 import api from "@/axios";
+import dayjs from "dayjs";
 import Sidebar from "@/views/Sidebar.vue";
 import Swal from "sweetalert2";
+import { formatAppDate } from "@/lib/dates";
 import {
   Home,
   UserPlus,
@@ -293,6 +306,7 @@ const showAssignModal = ref(false);
 const showPaymentModal = ref(false);
 const showDetailModal = ref(false);
 const selectedDetailId = ref(null);
+const detalleKey = (id) => String(id);
 
 onMounted(() => {
   cargarMiembros();
@@ -377,14 +391,19 @@ const handleMemberAssigned = async (member) => {
 };
 
 // --- Utilidades ---
-// Corregido con if/else para evitar el error de ESLint
 const toggleDetalle = (id) => {
-  if (detallesAbiertos.value.includes(id)) {
-    detallesAbiertos.value = detallesAbiertos.value.filter((i) => i !== id);
+  const key = detalleKey(id);
+  if (detallesAbiertos.value.includes(key)) {
+    detallesAbiertos.value = detallesAbiertos.value.filter((i) => i !== key);
+    if (selectedDetailId.value !== null && detalleKey(selectedDetailId.value) === key) {
+      cerrarDetalle();
+    }
   } else {
-    detallesAbiertos.value.push(id);
+    detallesAbiertos.value.push(key);
   }
 };
+
+const isDetalleAbierto = (id) => detallesAbiertos.value.includes(detalleKey(id));
 
 const abrirAsignar = (member) => {
   selectedMember.value = member;
@@ -394,6 +413,11 @@ const abrirAsignar = (member) => {
 const abrirDetalle = (member) => {
   selectedDetailId.value = member.id;
   showDetailModal.value = true;
+};
+
+const cerrarDetalle = () => {
+  showDetailModal.value = false;
+  selectedDetailId.value = null;
 };
 
 const abrirPagar = (member) => {
@@ -444,36 +468,77 @@ function formatEstatura(estatura) {
   return `${metros} m`;
 }
 
-function memberStatus(member) {
-  return member?.memberships?.[0]?.status || "inactive";
+function formatPrice(price) {
+  if (price == null) return "—";
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    maximumFractionDigits: 0,
+  }).format(price);
 }
 
-function statusColor(status) {
+function traducirFrecuencia(frequency) {
+  const map = {
+    daily: "Diaria",
+    weekly: "Semanal",
+    biweekly: "Quincenal",
+    monthly: "Mensual",
+    quarterly: "Trimestral",
+    yearly: "Anual",
+  };
+  return map[frequency] || frequency || "—";
+}
+
+function membershipPlanType(member) {
+  const plan = member?.memberships?.[0]?.plan;
+  return plan?.type?.name || plan?.membership_type?.name || plan?.membershipType?.name || "—";
+}
+
+function traducirEstado(status) {
+  const map = {
+    active: "Activa",
+    expired: "Expirada",
+    inactive_unpaid: "Sin pago",
+    pending: "Pendiente",
+    inactive: "Inactiva",
+    cancelled: "Cancelada",
+  };
+  return map[status] || status || "—";
+}
+
+function membershipStatusColor(status) {
   const map = {
     active: "green",
     expired: "red",
-    pending: "yellow",
     inactive_unpaid: "yellow",
-    cancelled: "gray",
+    pending: "yellow",
     inactive: "gray",
+    cancelled: "gray",
   };
   return map[status] || "gray";
 }
 
-// ... código existente ...
+function membershipDays(member) {
+  const endDate = member?.memberships?.[0]?.end_date;
+  if (!endDate) return null;
+  return dayjs(endDate).diff(dayjs(), "day");
+}
 
-const traducirEstado = (estado) => {
-  const diccionario = {
-    active: "Activa",
-    expired: "Vencida",
-    pending: "Pendiente",
-    inactive_unpaid: "Sin pago",
-    inactive: "Inactiva",
-    cancelled: "Cancelada",
-  };
-  // Si no encuentra la traducción, devuelve el estado original
-  return diccionario[estado] || estado;
-};
+function membershipDaysText(member) {
+  const days = membershipDays(member);
+  if (days === null) return "—";
+  if (days < 0) return `Vencida hace ${Math.abs(days)} días`;
+  return `${days} días`;
+}
+
+function membershipDaysClass(member) {
+  const days = membershipDays(member);
+  if (days === null) return "";
+  if (days < 0) return "membership-days-danger";
+  if (days <= 7) return "membership-days-warning";
+  return "membership-days-success";
+}
+
 </script>
 
 <style scoped>
@@ -503,8 +568,8 @@ const traducirEstado = (estado) => {
 }
 
 .member-avatar-wrap {
-  width: 3rem;
-  height: 3rem;
+  width: 4.75rem;
+  height: 5rem;
   border-radius: 0.8rem;
   overflow: hidden;
   flex-shrink: 0;
@@ -529,52 +594,18 @@ const traducirEstado = (estado) => {
   background: rgba(99, 102, 241, 0.12);
 }
 
-.member-state-text {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-
-.member-state-green { color: #15803d; }
-.member-state-red { color: #dc2626; }
-.member-state-yellow { color: #b45309; }
-.member-state-gray { color: var(--color-text-muted); }
-
 .member-card-detail {
   padding: 0.9rem 1rem 1rem;
   background: var(--color-surface-soft);
 }
 
-.member-detail-photo-shell {
-  border: 1px solid var(--color-border);
-  border-radius: 0.75rem;
-  overflow: hidden;
-  background: var(--color-surface);
-  margin-bottom: 0.75rem;
-}
-
-.member-detail-photo {
-  width: 100%;
-  height: 9rem;
-  object-fit: cover;
-  display: block;
-}
-
-.member-detail-photo-empty {
-  height: 9rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  font-size: 0.75rem;
-  color: var(--color-text-subtle);
-}
-
 .member-info-list {
-  border: 1px solid var(--color-border);
+  border: 1px solid #cbd5e1; /* slate-300 */
   border-radius: 0.75rem;
   background: var(--color-surface);
+}
+:global(.dark) .member-info-list {
+  border-color: #475569; /* slate-600 */
 }
 
 .member-info-row {
@@ -583,7 +614,10 @@ const traducirEstado = (estado) => {
   align-items: center;
   gap: 0.65rem;
   padding: 0.55rem 0.7rem;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid #cbd5e1;
+}
+:global(.dark) .member-info-row {
+  border-bottom-color: #475569;
 }
 .member-info-row:last-child {
   border-bottom: none;
@@ -603,6 +637,98 @@ const traducirEstado = (estado) => {
   color: var(--color-text);
   text-align: right;
   word-break: break-word;
+}
+
+.member-membership-block {
+  margin-top: 0.75rem;
+}
+
+.member-membership-card {
+  border: 1px solid #cbd5e1; /* slate-300 */
+  border-radius: 0.75rem;
+  padding: 0.85rem;
+  background: var(--color-surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+:global(.dark) .member-membership-card {
+  border-color: #475569; /* slate-600 */
+}
+
+.member-membership-divider {
+  border-bottom-color: #cbd5e1;
+}
+:global(.dark) .member-membership-divider {
+  border-bottom-color: #475569;
+}
+
+.member-membership-status {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 1.35rem;
+  padding: 0.12rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.membership-status-green {
+  background: rgba(34, 197, 94, 0.15);
+  color: #15803d;
+}
+
+.membership-status-red {
+  background: rgba(239, 68, 68, 0.14);
+  color: #dc2626;
+}
+
+.membership-status-yellow {
+  background: rgba(245, 158, 11, 0.18);
+  color: #b45309;
+}
+
+.membership-status-gray {
+  background: var(--color-overlay);
+  color: var(--color-text-muted);
+}
+
+.member-membership-days {
+  display: block;
+  font-size: 0.78rem;
+}
+
+.membership-days-danger {
+  color: #dc2626;
+}
+
+.membership-days-warning {
+  color: #d97706;
+}
+
+.membership-days-success {
+  color: #15803d;
+}
+
+.member-state-green { color: #16a34a; }
+:global(.dark) .member-state-green { color: #22c55e; }
+
+.member-state-red { color: #dc2626; }
+:global(.dark) .member-state-red { color: #ef4444; }
+
+.member-state-yellow { color: #d97706; }
+:global(.dark) .member-state-yellow { color: #f59e0b; }
+
+.member-state-gray { color: #6b7280; }
+:global(.dark) .member-state-gray { color: #9ca3af; }
+
+.member-membership-empty {
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  background: var(--color-surface);
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
 }
 
 .member-notes {
@@ -712,7 +838,4 @@ const traducirEstado = (estado) => {
   background: rgba(99, 102, 241, 0.2);
 }
 
-:global(.dark) .member-state-green { color: #4ade80; }
-:global(.dark) .member-state-red { color: #fca5a5; }
-:global(.dark) .member-state-yellow { color: #fcd34d; }
 </style>

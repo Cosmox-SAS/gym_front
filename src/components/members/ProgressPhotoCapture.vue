@@ -4,40 +4,47 @@
         <div
           v-for="(label, i) in labels"
           :key="i"
-          class="photo-slot"
+          class="photo-slot items-center"
         >
-        <div class="photo-frame">
-          <img
-            v-if="photos[i]?.photo"
-            :src="photos[i].photo"
-            :alt="`Foto ${label}`"
-            class="photo-img"
-          />
-          <div v-else class="photo-empty">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span class="text-[10px] text-subtle mt-1.5">Sin foto</span>
+          <!-- Etiqueta superior -->
+          <span class="px-3 py-1 rounded-full bg-gray-800/70 text-white text-[10px] font-bold uppercase tracking-widest shadow-sm">{{ label }}</span>
+
+          <div class="photo-frame w-full">
+            <img
+              v-if="photos[i]?.photo"
+              :src="photos[i].photo"
+              :alt="`Foto ${label}`"
+              class="photo-img"
+            />
+            <div v-else class="photo-empty">
+              <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span class="text-[10px] text-subtle mt-1.5 uppercase font-bold">Sin foto</span>
+            </div>
+
+            <button
+              v-if="photos[i]?.photo"
+              type="button"
+              class="photo-remove"
+              aria-label="Quitar foto"
+              @click="removePhoto(i)"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
-          <span class="photo-tag">{{ label }}</span>
-          <span v-if="photos[i]?.taken_at" class="photo-date">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            {{ formatDate(photos[i].taken_at) }}
-          </span>
-          <button
-            v-if="photos[i]?.photo"
-            type="button"
-            class="photo-remove"
-            aria-label="Quitar foto"
-            @click="removePhoto(i)"
-          >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+
+          <!-- Fecha inferior -->
+          <div class="h-6 flex items-center justify-center">
+            <span v-if="photos[i]?.taken_at" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-800/70 text-white text-[11px] font-semibold shadow-sm">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {{ formatDate(photos[i].taken_at) }}
+            </span>
+          </div>
         <div class="photo-actions">
           <button
             type="button"
@@ -71,7 +78,7 @@
           />
         </div>
         <p v-if="uploadingIndex === i" class="photo-feedback photo-feedback-info">
-          Subiendo foto...
+          Preparando foto...
         </p>
         <p v-if="slotErrors[i]" class="photo-feedback photo-feedback-error">
           {{ slotErrors[i] }}
@@ -138,7 +145,7 @@
 
 <script setup>
 import { ref, computed, nextTick, onBeforeUnmount } from "vue";
-import api from "@/axios";
+import { formatAppDate } from "@/lib/dates";
 
 const props = defineProps({
   modelValue: {
@@ -167,8 +174,14 @@ const labels = computed(() => props.labels);
 function normalizeEntry(value) {
   if (!value) return null;
   if (typeof value === "string") return { photo: value, taken_at: null };
-  if (typeof value === "object" && value.photo) {
-    return { photo: value.photo, taken_at: value.taken_at || null };
+  if (typeof value === "object" && (value.photo || value.path || value.file)) {
+    return {
+      photo: value.photo || "",
+      path: value.path || "",
+      taken_at: value.taken_at || null,
+      file: value.file || null,
+      pending: !!value.pending,
+    };
   }
   return null;
 }
@@ -178,30 +191,30 @@ const photos = computed(() => {
   return labels.value.map((_, i) => normalizeEntry(v[i]));
 });
 
-function setPhoto(index, dataUrl) {
+function setPhoto(index, data) {
   const next = [...photos.value];
-  next[index] = dataUrl
+  next[index] = data
     ? {
-        photo: typeof dataUrl === "string" ? dataUrl : dataUrl.photo,
-        taken_at: typeof dataUrl === "string" ? new Date().toISOString() : dataUrl.taken_at,
+        photo: typeof data === "string" ? data : data.photo,
+        path: typeof data === "string" ? "" : data.path || "",
+        taken_at: typeof data === "string" ? new Date().toISOString() : data.taken_at,
+        file: typeof data === "string" ? null : data.file || null,
+        pending: typeof data === "string" ? false : !!data.pending,
       }
     : null;
   emit("update:modelValue", next);
 }
 
 function removePhoto(index) {
+  const previous = photos.value[index];
+  if (previous?.pending && previous.photo?.startsWith("blob:")) {
+    URL.revokeObjectURL(previous.photo);
+  }
   setPhoto(index, null);
 }
 
 function formatDate(iso) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("es-CO", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  return formatAppDate(iso, "");
 }
 
 // ===== File upload =====
@@ -231,7 +244,7 @@ async function onFileSelected(event, index) {
     event.target.value = "";
     return;
   }
-  await uploadPhoto(index, file);
+  setPendingPhoto(index, file);
   event.target.value = "";
 }
 
@@ -257,47 +270,27 @@ function clearMessages(index) {
   globalSuccessMessage.value = "";
 }
 
-function resolveUploadContext() {
-  const hasMemberId = props.memberId !== null && props.memberId !== undefined && props.memberId !== "";
-  const hasIdentification = !!(props.identification || "").trim();
-
-  if (hasMemberId) {
-    return { member_id: String(props.memberId) };
-  }
-
-  if (hasIdentification) {
-    return { identification: (props.identification || "").trim() };
-  }
-
-  return null;
-}
-
-async function uploadPhoto(index, file) {
+function setPendingPhoto(index, file) {
   uploadingIndex.value = index;
 
   try {
-    const context = resolveUploadContext();
-    if (!context) {
-      slotErrors.value[index] = "Ingresa la identificacion o guarda el cliente primero.";
-      return;
+    const previewUrl = URL.createObjectURL(file);
+    const previous = photos.value[index];
+    if (previous?.pending && previous.photo?.startsWith("blob:")) {
+      URL.revokeObjectURL(previous.photo);
     }
 
-    const form = new FormData();
-    form.append("photo", file);
-    Object.entries(context).forEach(([key, value]) => form.append(key, value));
-
-    const { data } = await api.post("/members/photos/upload", form, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-
     setPhoto(index, {
-      photo: data.url,
-      taken_at: data.taken_at || new Date().toISOString(),
+      photo: previewUrl,
+      path: "",
+      file,
+      pending: true,
+      taken_at: new Date().toISOString(),
     });
-    slotSuccess.value[index] = "Foto subida con exito.";
-    globalSuccessMessage.value = "Imagen cargada correctamente. Guarda el cliente para persistir.";
+    slotSuccess.value[index] = "Foto lista. Se subira al guardar.";
+    globalSuccessMessage.value = "Las fotos se subiran cuando guardes el cliente.";
   } catch {
-    slotErrors.value[index] = "No se pudo subir la foto. Intenta nuevamente.";
+    slotErrors.value[index] = "No se pudo preparar la foto. Intenta nuevamente.";
   } finally {
     uploadingIndex.value = null;
   }
@@ -374,11 +367,18 @@ function capturePhoto() {
     const file = new File([blob], `captura-${Date.now()}.jpg`, { type: "image/jpeg" });
     const index = cameraIndex.value;
     closeCamera();
-    await uploadPhoto(index, file);
+    setPendingPhoto(index, file);
   }, "image/jpeg", 0.85);
 }
 
-onBeforeUnmount(stopStream);
+onBeforeUnmount(() => {
+  stopStream();
+  photos.value.forEach((photo) => {
+    if (photo?.pending && photo.photo?.startsWith("blob:")) {
+      URL.revokeObjectURL(photo.photo);
+    }
+  });
+});
 </script>
 
 <style scoped>
@@ -418,38 +418,7 @@ onBeforeUnmount(stopStream);
   color: var(--color-text-subtle);
 }
 
-.photo-tag {
-  position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  font-size: 0.625rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: white;
-  background: rgba(0, 0, 0, 0.55);
-  padding: 0.2rem 0.55rem;
-  border-radius: 9999px;
-  backdrop-filter: blur(4px);
-}
 
-.photo-date {
-  position: absolute;
-  bottom: 0.5rem;
-  left: 0.5rem;
-  right: 0.5rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: white;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 0.25rem 0.5rem;
-  border-radius: 9999px;
-  backdrop-filter: blur(4px);
-}
 
 .photo-remove {
   position: absolute;

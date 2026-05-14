@@ -224,6 +224,7 @@ import FingerprintEnroll from "@/components/FingerprintEnroll.vue";
 import ProgressPhotoCapture from "@/components/members/ProgressPhotoCapture.vue";
 import { BaseInput, BaseSelect, BaseButton } from "@/components/ui";
 import { SWAL_COLORS } from "@/lib/colors";
+import { uploadPendingMemberPhotos } from "@/lib/memberPhotos";
 
 const props = defineProps({
   show: Boolean,
@@ -281,11 +282,15 @@ function resetForm() {
 const registrar = async () => {
   loading.value = true;
   try {
-    const payload = {
-      ...form,
-      initial_photos: initialPhotos.value,
-    };
+    const payload = { ...form };
     const { data: nuevoCliente } = await api.post("/members", payload);
+
+    const uploadedPhotos = await uploadPendingMemberPhotos(nuevoCliente.id, initialPhotos.value);
+    if (uploadedPhotos.some(Boolean)) {
+      await api.put(`/members/${nuevoCliente.id}`, {
+        initial_photos: uploadedPhotos,
+      });
+    }
 
     if (capturedTemplate.value) {
       await api.post(`/members/${nuevoCliente.id}/fingerprint`, {

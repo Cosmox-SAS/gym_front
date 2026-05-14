@@ -57,7 +57,7 @@
 
             <router-link
               id="admin-settings-item"
-              to="/configuracion"
+                to="/configuration"
               class="sidebar-item"
               :style="{ '--accent': '#94a3b8' }"
               @click="sidebarOpen = false; adminOpen = false"

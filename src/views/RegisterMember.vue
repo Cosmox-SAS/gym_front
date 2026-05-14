@@ -252,6 +252,25 @@
             </div>
           </section>
 
+          <!-- ===== Fotos Iniciales ===== -->
+          <section class="pt-6 border-t border-default-soft">
+            <div class="section-header">
+              <span class="section-bar bg-emerald-400" />
+              <h2 class="section-title text-emerald-300">Fotos Iniciales</h2>
+              <span class="ml-auto dark-label-tiny">Opcional</span>
+            </div>
+            <div class="rounded-xl border-2 border-dashed border-default-soft bg-[var(--color-overlay)] p-4">
+              <ProgressPhotoCapture
+                v-model="initialPhotos"
+                :labels="['Frente', 'Perfil', 'Espalda']"
+                :identification="form.identification"
+              />
+              <p class="mt-3 text-xs text-muted">
+                Solo PNG/JPG/JPEG hasta 3MB.
+              </p>
+            </div>
+          </section>
+
           <!-- ===== Error global ===== -->
           <div
             v-if="errorMessage"
@@ -296,7 +315,9 @@ import { X, UserPlus, Save, Loader2 } from 'lucide-vue-next'
 import Swal from "sweetalert2";
 import dayjs from "dayjs";
 import FingerprintEnroll from "@/components/FingerprintEnroll.vue";
+import ProgressPhotoCapture from "@/components/members/ProgressPhotoCapture.vue";
 import { SWAL_COLORS } from "@/lib/colors";
+import { uploadPendingMemberPhotos } from "@/lib/memberPhotos";
 
 const router = useRouter();
 
@@ -323,6 +344,7 @@ const selectedPlanId = ref(null);
 const saving = ref(false);
 const errorMessage = ref("");
 const capturedTemplate = ref("");
+const initialPhotos = ref([null, null, null]);
 
 function translateFrequency(freq) {
   const map = {
@@ -388,6 +410,13 @@ const registerMember = async () => {
 
     const res = await api.post("/members", payload);
     const member = res.data;
+
+    const uploadedPhotos = await uploadPendingMemberPhotos(member.id, initialPhotos.value);
+    if (uploadedPhotos.some(Boolean)) {
+      await api.put(`/members/${member.id}`, {
+        initial_photos: uploadedPhotos,
+      });
+    }
 
     if (selectedPlanId.value) {
       const plan = planes.value.find((p) => p.id === selectedPlanId.value);
