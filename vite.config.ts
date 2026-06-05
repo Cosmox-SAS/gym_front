@@ -12,13 +12,14 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
-        name: 'Cosmogym',
-        short_name: 'Cosmogym',
-        description: 'Gestión de gimnasio Cosmogym',
+        id: '/',
+        name: 'CosmoGym',
+        short_name: 'CosmoGym',
+        description: 'Gestión de gimnasio CosmoGym',
         theme_color: '#4f46e5',
         background_color: '#0f172a',
         display: 'standalone',
-        orientation: 'portrait',
+        display_override: ['standalone', 'minimal-ui', 'browser'],
         scope: '/',
         start_url: '/',
         icons: [
@@ -41,7 +42,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,woff2}', 'pwa-*.png'],
+        globPatterns: ['**/*.{js,css,html,ico,woff2,webmanifest}', 'pwa-*.png'],
         runtimeCaching: [
           {
             urlPattern: /^https?:\/\/.*\/api\/.*/i,
@@ -69,4 +70,3 @@ export default defineConfig({
   }
 
 })
-
