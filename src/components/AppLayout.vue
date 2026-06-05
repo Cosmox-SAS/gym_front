@@ -107,6 +107,18 @@
 
         <!-- Spacer -->
         <div class="flex-1" />
+
+        <!-- Botón instalar PWA -->
+        <button
+          v-if="pwaInstallable"
+          @click="installPwa"
+          class="lg:hidden flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-indigo-600 text-white shadow"
+          aria-label="Instalar app"
+        >
+          <Download class="w-3.5 h-3.5" aria-hidden="true" />
+          Instalar
+        </button>
+
       </div>
 
       <slot />
@@ -115,7 +127,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -141,6 +153,7 @@ import {
   ChevronDown,
   Menu,
   X,
+  Download,
 } from 'lucide-vue-next'
 
 const route  = useRoute()
@@ -148,6 +161,29 @@ const router = useRouter()
 const auth   = useAuthStore()
 
 const { isDark, toggleTheme } = useTheme()
+
+// ── PWA Install ──
+const deferredPrompt = ref<any>(null)
+const pwaInstallable = ref(false)
+
+const onBeforeInstallPrompt = (e: Event) => {
+  e.preventDefault()
+  deferredPrompt.value = e
+  pwaInstallable.value = true
+}
+
+const installPwa = async () => {
+  if (!deferredPrompt.value) return
+  deferredPrompt.value.prompt()
+  const { outcome } = await deferredPrompt.value.userChoice
+  if (outcome === 'accepted') {
+    pwaInstallable.value = false
+    deferredPrompt.value = null
+  }
+}
+
+onMounted(() => window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt))
+onBeforeUnmount(() => window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt))
 
 const sidebarOpen = ref(false)
 const adminOpen   = ref(false)
