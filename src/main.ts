@@ -1,5 +1,8 @@
 import './assets/main.css'
-import 'animate.css';
+import 'animate.css'
+import { registerSW } from 'virtual:pwa-register'
+
+registerSW({ immediate: true })
 
 
 import { createApp } from 'vue'
