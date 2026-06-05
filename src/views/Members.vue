@@ -20,6 +20,45 @@
         </div>
       </div>
 
+      <div class="flex flex-wrap items-center gap-2 mb-4">
+        <button
+          @click="statusFilter = ''"
+          class="btn btn-sm whitespace-nowrap"
+          :class="statusFilter === '' ? 'btn-primary' : 'btn-secondary'"
+        >
+          Todos
+        </button>
+        <button
+          @click="statusFilter = 'expired'"
+          class="btn btn-sm whitespace-nowrap"
+          :class="statusFilter === 'expired' ? 'btn-primary' : 'btn-secondary'"
+        >
+          Vencidos
+        </button>
+        <button
+          @click="statusFilter = 'inactive_unpaid'"
+          class="btn btn-sm whitespace-nowrap"
+          :class="statusFilter === 'inactive_unpaid' ? 'btn-primary' : 'btn-secondary'"
+        >
+          Por Pagar
+        </button>
+        <button
+          @click="statusFilter = 'expiring_soon'"
+          class="btn btn-sm whitespace-nowrap"
+          :class="statusFilter === 'expiring_soon' ? 'btn-primary' : 'btn-secondary'"
+        >
+          Vencen Pronto
+        </button>
+
+        <div :class="['freq-select-wrap', selectedFrequency !== '' ? 'freq-select--active' : '']">
+          <BaseSelect
+            v-model="selectedFrequency"
+            :options="frecuenciaOpciones"
+            placeholder="Frecuencia"
+          />
+        </div>
+      </div>
+
       <div class="mb-6 relative">
         <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" aria-hidden="true" />
         <input
@@ -286,6 +325,8 @@ import {
   ChevronUp,
 } from "lucide-vue-next";
 
+import { BaseSelect } from "@/components/ui";
+
 // Importar Componentes Hijos
 import MemberRegisterModal from "@/components/members/MemberRegisterModal.vue";
 import MemberAssignModal from "@/components/members/MemberAssignModal.vue";
@@ -297,7 +338,17 @@ const members = ref([]);
 const planes = ref([]);
 const loading = ref(true);
 const busqueda = ref("");
+const statusFilter = ref("");
+const selectedFrequency = ref("");
 const detallesAbiertos = ref([]);
+
+const frecuenciaOpciones = computed(() => [
+  { value: "", label: "Frecuencias" },
+  { value: "daily", label: "Diario" },
+  { value: "weekly", label: "Semanal" },
+  { value: "biweekly", label: "Quincenal" },
+  { value: "monthly", label: "Mensual" },
+]);
 const selectedMember = ref(null);
 
 // Estado de Modales
@@ -427,9 +478,29 @@ const abrirPagar = (member) => {
 
 const miembrosFiltrados = computed(() => {
   const term = busqueda.value.toLowerCase();
-  return members.value.filter(
-    (m) => m.name.toLowerCase().includes(term) || (m.phone || "").includes(term),
-  );
+  return members.value.filter((m) => {
+    const matchesSearch =
+      m.name.toLowerCase().includes(term) || (m.phone || "").includes(term);
+    if (!matchesSearch) return false;
+
+    if (statusFilter.value !== "") {
+      const memberStatus = m.memberships?.[0]?.status;
+      if (statusFilter.value === "expired" && memberStatus !== "expired") return false;
+      if (statusFilter.value === "inactive_unpaid" && memberStatus !== "inactive_unpaid") return false;
+      if (statusFilter.value === "expiring_soon") {
+        if (memberStatus !== "active") return false;
+        const days = membershipDays(m);
+        if (days === null || days < 0 || days > 7) return false;
+      }
+    }
+
+    if (selectedFrequency.value) {
+      const freq = m.memberships?.[0]?.plan?.frequency;
+      if (freq !== selectedFrequency.value) return false;
+    }
+
+    return true;
+  });
 });
 const currentPageMiembros = ref(1);
 const PER_PAGE = 10;
@@ -439,6 +510,8 @@ const miembrosPaginados = computed(() => {
   return miembrosFiltrados.value.slice(start, start + PER_PAGE);
 });
 watch(busqueda, () => { currentPageMiembros.value = 1; });
+watch(statusFilter, () => { currentPageMiembros.value = 1; });
+watch(selectedFrequency, () => { currentPageMiembros.value = 1; });
 
 function formatearTelefono(numero) {
   if (!numero) return "";
@@ -542,6 +615,57 @@ function membershipDaysClass(member) {
 </script>
 
 <style scoped>
+/* ── Frecuencia select: mismo tamaño y nivel que btn-sm ── */
+.freq-select-wrap {
+  min-width: 7.5rem;
+}
+.freq-select-wrap :deep(.cosmo-select-input) {
+  height: 2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  padding: 0 2rem 0 0.75rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  transition: all 0.2s;
+}
+.freq-select-wrap :deep(.cosmo-select-input:hover:not(:disabled)) {
+  background: var(--color-surface-soft);
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+.freq-select-wrap :deep(.cosmo-select-list) {
+  width: max-content;
+  min-width: 100%;
+}
+.freq-select-wrap :deep(.cosmo-select-item) {
+  white-space: nowrap;
+}
+.freq-select--active :deep(.cosmo-select-input) {
+  background: #1e293b !important;
+  border-color: #1e293b !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.freq-select--active :deep(.cosmo-select-chevron) {
+  color: rgba(255,255,255,0.8);
+}
+.freq-select--active :deep(.cosmo-select-placeholder) {
+  color: rgba(255,255,255,0.85);
+  opacity: 1;
+}
+:global(.dark) .freq-select-wrap :deep(.cosmo-select-input) {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+:global(.dark) .freq-select--active :deep(.cosmo-select-input) {
+  background: #475569 !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+
 .member-card {
   position: relative;
   border-radius: 1rem;
