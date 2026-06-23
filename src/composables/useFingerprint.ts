@@ -134,10 +134,21 @@ export function useFingerprint() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ sample: sampleData, candidates: identifyCandidates }),
             })
-            const matchData = await matchResp.json()
+            const matchText = await matchResp.text()
+            let matchData: any = null
+
+            try {
+              matchData = matchText ? JSON.parse(matchText) : null
+            } catch {
+              throw new Error('El servicio local de huellas devolvió una respuesta no válida')
+            }
 
             if (!matchResp.ok || !matchData.member_id) {
-              emitAndResolve({ event: 'identified', success: false, message: 'Huella no reconocida' })
+              emitAndResolve({
+                event: 'identified',
+                success: false,
+                message: matchData?.error || 'Huella no reconocida',
+              })
               return
             }
 
@@ -147,7 +158,8 @@ export function useFingerprint() {
               headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
               body: JSON.stringify({ member_id: matchData.member_id }),
             })
-            const logData = await logResp.json()
+            const logText = await logResp.text()
+            const logData = logText ? JSON.parse(logText) : {}
 
             const member = identifyCandidates.find(c => String(c.id) === String(matchData.member_id))?.member
             emitAndResolve({
@@ -157,11 +169,33 @@ export function useFingerprint() {
               member: logData.member ?? member,
             })
           } catch (e: any) {
-            emitAndResolve({ event: 'error', message: e.message ?? 'Error al identificar' })
+            const message = e.message === 'Failed to fetch'
+              ? 'No se pudo conectar con el servicio local de huellas. Inicia fingerprint_service.py y verifica que dpfj.dll esté instalado.'
+              : e.message ?? 'Error al identificar'
+
+            emitAndResolve({ event: 'error', message })
           }
         }
       } catch (e: any) {
         emitAndResolve({ event: 'error', message: e.message ?? 'Error procesando muestra' })
+      }
+    }
+  }
+
+  async function checkReader(): Promise<FingerprintEvent> {
+    try {
+      createSdk()
+      const devices = await sdk.enumerateDevices()
+      connected.value = Array.isArray(devices) && devices.length > 0
+
+      return connected.value
+        ? { event: 'status', message: 'Lector conectado' }
+        : { event: 'error', message: 'No se detectó ningún lector conectado' }
+    } catch (e: any) {
+      connected.value = false
+      return {
+        event: 'error',
+        message: e.message || 'No se pudo comunicar con el lector. Verifica DpHostW.exe',
       }
     }
   }
@@ -201,8 +235,35 @@ export function useFingerprint() {
     setStatus('Cargando base de datos de huellas...')
 
     try {
-      const resp = await fetch(`${apiUrl}/kiosk/fingerprints/${gimnasioId}`)
-      const membersData: any[] = await resp.json()
+      let resp = await fetch(`${apiUrl}/kiosk/fingerprints/${gimnasioId}`, {
+        headers: { 'Accept': 'application/json' },
+      })
+
+      if (resp.status === 404) {
+        resp = await fetch(`${apiUrl}/access/fingerprints/${gimnasioId}`, {
+          headers: { 'Accept': 'application/json' },
+        })
+      }
+
+      const responseText = await resp.text()
+      let payload: any = null
+
+      try {
+        payload = responseText ? JSON.parse(responseText) : null
+      } catch {
+        throw new Error('El servidor no devolvió JSON válido al cargar las huellas')
+      }
+
+      if (!resp.ok) {
+        const serverMessage = payload?.message || payload?.error
+        throw new Error(serverMessage || `Error ${resp.status} al cargar huellas`)
+      }
+
+      const membersData: any[] = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.data)
+          ? payload.data
+          : []
 
       if (!membersData.length) {
         busy.value = false
@@ -211,9 +272,9 @@ export function useFingerprint() {
 
       identifyCandidates = membersData.map(m => ({ id: String(m.id), template: m.fingerprint_data, member: m }))
       identifyApiUrl = apiUrl
-    } catch {
+    } catch (e: any) {
       busy.value = false
-      return { event: 'error', message: 'No se pudo cargar la base de datos de huellas' }
+      return { event: 'error', message: e.message || 'No se pudo cargar la base de datos de huellas' }
     }
 
     mode = 'identify'
@@ -225,5 +286,5 @@ export function useFingerprint() {
 
   onUnmounted(disconnect)
 
-  return { connected, busy, statusMsg, lastEvent, capture, enroll, identify, disconnect }
+  return { connected, busy, statusMsg, lastEvent, capture, enroll, identify, checkReader, disconnect }
 }

@@ -47,7 +47,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useFingerprint } from '@/composables/useFingerprint'
-import { useAuthStore } from '@/stores/useAuthStore'
+import api from '@/axios'
 import { Fingerprint, Check, Circle, CheckCircle2, XCircle, Loader2 } from 'lucide-vue-next'
 
 const props = defineProps<{
@@ -60,7 +60,6 @@ const emit = defineEmits<{
   captured: [template: string]
 }>()
 
-const auth = useAuthStore()
 const { busy, statusMsg, enroll } = useFingerprint()
 
 const result   = ref<{ success: boolean; message: string } | null>(null)
@@ -70,26 +69,38 @@ async function startEnroll() {
   result.value = null
 
   try {
-    if (props.memberId) {
-      // Modo edición: guardar directamente en la API tras 4 muestras
-      const ev = await enroll(props.memberId, import.meta.env.VITE_API_URL, auth.token as string)
-      if (ev.event === 'enrolled') {
-        result.value = { success: ev.success, message: ev.message }
-        if (ev.success) emit('enrolled')
-      }
-    } else {
-      // Modo creación: acumular 4 muestras y emitir template (se guardará al registrar)
-      const ev = await enroll(null, '', '')
-      if (ev.event === 'captured') {
-        if (ev.success && (ev as any).template) {
-          captured.value = true
-          result.value   = { success: true, message: 'Huella capturada. Se guardará al registrar.' }
-          emit('captured', ev.template!)
-        } else {
-          result.value = { success: false, message: (ev as any).message ?? 'Error al capturar.' }
-        }
-      }
+    const ev = await enroll(null, '', '')
+
+    if (ev.event !== 'captured' || !ev.success || !(ev as any).template) {
+      result.value = { success: false, message: (ev as any).message ?? 'Error al capturar.' }
+      return
     }
+
+    const template = ev.template!
+
+    if (props.memberId) {
+      try {
+        await api.post(`/members/${props.memberId}/fingerprint`, {
+          fingerprint_data: template,
+        })
+        captured.value = true
+        result.value = { success: true, message: 'Huella registrada correctamente' }
+        emit('enrolled')
+      } catch (err: any) {
+        const message =
+          err.response?.data?.message ||
+          err.response?.data?.error ||
+          'Error al guardar la huella en el servidor'
+
+        result.value = { success: false, message }
+      }
+      return
+    }
+
+    // Modo creación: acumular 4 muestras y emitir template (se guardará al registrar)
+    captured.value = true
+    result.value   = { success: true, message: 'Huella capturada. Se guardará al registrar.' }
+    emit('captured', template)
   } catch (err: any) {
     result.value = { success: false, message: err.message }
   }

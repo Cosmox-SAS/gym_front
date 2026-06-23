@@ -15,16 +15,33 @@ Uso:
 import ctypes
 import base64
 import json
+import os
+import platform
 import sys
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 # ── Cargar dpfj.dll ──────────────────────────────────────────────────────────
 
-DLL_PATH = r"C:\Program Files\DigitalPersona\U.are.U SDK\Windows\Lib\x64\dpfj.dll"
+IS_64BIT = platform.architecture()[0] == "64bit"
+DLL_CANDIDATES = [
+    r"C:\Program Files\DigitalPersona\U.are.U SDK\Windows\Lib\x64\dpfj.dll",
+    r"C:\Program Files\DigitalPersona\U.are.U RTE\Windows\Lib\x64\dpfj.dll",
+    r"C:\Windows\System32\dpfj.dll" if IS_64BIT else r"C:\Windows\SysWOW64\dpfj.dll",
+    r"C:\Windows\SysWOW64\dpfj.dll",
+]
+
+DLL_PATH = next((path for path in DLL_CANDIDATES if os.path.exists(path)), None)
+
+if not DLL_PATH:
+    print("[ERROR] No se encontró dpfj.dll. Instala DigitalPersona U.are.U SDK/RTE.")
+    print("        Rutas revisadas:")
+    for path in DLL_CANDIDATES:
+        print(f"        - {path}")
+    sys.exit(1)
 
 try:
-    dpfj = ctypes.CDLL(DLL_PATH)
+    dpfj = ctypes.WinDLL(DLL_PATH)
     print(f"[OK] dpfj.dll cargado desde: {DLL_PATH}")
 except OSError as e:
     print(f"[ERROR] No se pudo cargar dpfj.dll: {e}")
@@ -133,11 +150,23 @@ def health():
     return jsonify({"ok": True})
 
 
+@app.errorhandler(Exception)
+def handle_error(e):
+    print(f"  [ERROR] {e}")
+    return jsonify({"member_id": None, "error": str(e)}), 500
+
+
 @app.post("/match")
 def match():
     body       = request.get_json(force=True)
     sample     = body.get("sample")
     candidates = body.get("candidates", [])
+
+    if isinstance(candidates, str):
+        candidates = json.loads(candidates)
+
+    if isinstance(candidates, dict):
+        candidates = list(candidates.values())
 
     if not sample or not candidates:
         return jsonify({"member_id": None, "error": "Faltan datos"}), 400
@@ -153,6 +182,12 @@ def match():
     best_id    = None
 
     for c in candidates:
+        if isinstance(c, str):
+            c = json.loads(c)
+
+        if not isinstance(c, dict):
+            continue
+
         cand_fmd = parse_template(c.get("template", ""))
         if cand_fmd is None:
             continue
@@ -167,7 +202,7 @@ def match():
             best_score = score
             best_id    = c["id"]
 
-    print(f"  best → id={best_id} score={best_score} threshold={THRESHOLD}")
+    print(f"  best -> id={best_id} score={best_score} threshold={THRESHOLD}")
 
     if best_id is None or best_score >= THRESHOLD:
         return jsonify({"member_id": None, "score": best_score})
