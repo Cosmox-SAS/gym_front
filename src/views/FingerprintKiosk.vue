@@ -77,10 +77,25 @@ import {
 
 const route  = useRoute()
 const router = useRouter()
-const { connected, busy, statusMsg, identify } = useFingerprint()
+const { connected, busy, statusMsg, identify, checkReader } = useFingerprint()
 
-// El gym_id viene por query param: /kiosko?gym=1
-const gimnasioId = computed(() => Number(route.query.gym) || null)
+function getStoredGymId() {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') ?? 'null')
+    return Number(user?.gimnasio_id ?? user?.gimnasio?.id) || null
+  } catch {
+    return null
+  }
+}
+
+// Acepta /kiosko?gym=1, /kiosko/1 o el gimnasio guardado en la sesión local.
+const gimnasioId = computed(() => {
+  const paramId = Array.isArray(route.params.gimnasioId)
+    ? route.params.gimnasioId[0]
+    : route.params.gimnasioId
+
+  return Number(route.query.gym) || Number(paramId) || getStoredGymId()
+})
 
 type State = 'idle' | 'scanning' | 'success' | 'expired' | 'unknown'
 
@@ -146,7 +161,7 @@ async function startIdentify() {
 
   if (!gimnasioId.value) {
     state.value  = 'unknown'
-    errMsg.value = 'Falta el parámetro ?gym=ID en la URL.'
+    errMsg.value = 'Falta el ID del gimnasio. Usa /kiosko?gym=ID o /kiosko/ID.'
     return
   }
 
@@ -198,7 +213,7 @@ async function startIdentify() {
   scheduleReset(isOverheat ? OVERHEAT_DELAY : RESET_DELAY)
 }
 
-onMounted(() => {
-  // La conexión con el lector se inicializa automáticamente dentro de useFingerprint
+onMounted(async () => {
+  await checkReader()
 })
 </script>

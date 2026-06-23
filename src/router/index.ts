@@ -124,7 +124,7 @@ const router = createRouter({
     },
 
     {
-      path: "/kiosko",
+      path: "/kiosko/:gimnasioId?",
       name: "FingerprintKiosk",
       component: () => import("@/views/FingerprintKiosk.vue"),
       // Sin requiresAuth — el kiosco corre sin sesión de admin
