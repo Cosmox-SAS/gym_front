@@ -43,12 +43,12 @@
 
       <!-- Botón escanear -->
       <button
-        v-if="!scanning && state !== 'expired'"
+        v-if="state === 'unknown' && !scanning"
         @click="manualRetry"
         class="w-full mt-2 py-3 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white transition-colors inline-flex items-center justify-center gap-2"
       >
         <Fingerprint class="w-4 h-4" aria-hidden="true" />
-        <span>{{ state === 'idle' && !member ? 'Escanear huella' : 'Escanear de nuevo' }}</span>
+        <span>Reintentar ahora</span>
       </button>
     </div>
 
@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useFingerprint } from '@/composables/useFingerprint'
 import { formatAppDateTime } from '@/lib/dates'
@@ -106,12 +106,38 @@ const accessTime = ref('')
 const scanning   = computed(() => state.value === 'scanning')
 
 let resetTimer: ReturnType<typeof setTimeout> | null = null
+let autoScan = true
+let selectedVoice: SpeechSynthesisVoice | null = null
+
+function getSpanishVoice() {
+  const voices = window.speechSynthesis?.getVoices?.() ?? []
+  return voices.find(v => v.lang.toLowerCase().startsWith('es-co')) ||
+         voices.find(v => v.lang.toLowerCase().startsWith('es')) ||
+         null
+}
+
+function speak(message: string) {
+  if (!('speechSynthesis' in window)) return
+
+  window.speechSynthesis.cancel()
+  selectedVoice = selectedVoice || getSpanishVoice()
+
+  const utterance = new SpeechSynthesisUtterance(message)
+  utterance.lang = selectedVoice?.lang || 'es-CO'
+  utterance.voice = selectedVoice
+  utterance.rate = 0.95
+  utterance.pitch = 1
+  utterance.volume = 1
+
+  window.speechSynthesis.speak(utterance)
+}
 
 function scheduleReset(delay: number) {
   if (resetTimer) clearTimeout(resetTimer)
   resetTimer = setTimeout(() => {
     state.value  = 'idle'
     member.value = null
+    if (autoScan) startIdentify()
   }, delay)
 }
 
@@ -177,6 +203,7 @@ async function startIdentify() {
         state.value      = 'success'
         member.value     = ev.member
         accessTime.value = formatAppDateTime(new Date())
+        speak('Acceso permitido')
         scheduleReset(RESET_DELAY)
         return
 
@@ -184,6 +211,7 @@ async function startIdentify() {
         // Membresía vencida — redirigir a pagos
         state.value  = 'expired'
         member.value = ev.member
+        speak('Membresía vencida')
         setTimeout(() => {
           router.push({ name: 'Payments' })
         }, 2500)
@@ -192,14 +220,17 @@ async function startIdentify() {
       } else {
         state.value  = 'unknown'
         errMsg.value = ev.message
+        speak(ev.message || 'Huella no reconocida')
       }
     } else if (ev.event === 'error') {
       state.value  = 'unknown'
       errMsg.value = ev.message
+      speak('Error al verificar la huella')
     }
   } catch (err: any) {
     state.value  = 'unknown'
     errMsg.value = err.message
+    speak('Error al verificar la huella')
   }
 
   // Si se recalentó, mostrar mensaje especial
@@ -208,12 +239,23 @@ async function startIdentify() {
                      errMsg.value?.toLowerCase().includes('calor') ||
                      errMsg.value?.toLowerCase().includes('temperatura')
 
-  if (isOverheat) errMsg.value = 'Lector en reposo por temperatura. Espera un momento...'
+  if (isOverheat) {
+    errMsg.value = 'Lector en reposo por temperatura. Espera un momento...'
+    speak('Lector en reposo por temperatura. Espera un momento')
+  }
 
   scheduleReset(isOverheat ? OVERHEAT_DELAY : RESET_DELAY)
 }
 
 onMounted(async () => {
+  window.speechSynthesis?.getVoices?.()
   await checkReader()
+  startIdentify()
+})
+
+onUnmounted(() => {
+  autoScan = false
+  if (resetTimer) clearTimeout(resetTimer)
+  window.speechSynthesis?.cancel()
 })
 </script>
