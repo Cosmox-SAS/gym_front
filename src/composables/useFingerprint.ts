@@ -182,9 +182,32 @@ export function useFingerprint() {
     }
   }
 
-  async function checkReader(): Promise<FingerprintEvent> {
+  function ensureSdk(): boolean {
+    if (sdk) return true
+
     try {
       createSdk()
+      return !!sdk
+    } catch {
+      return false
+    }
+  }
+
+  async function startAcquisition(): Promise<boolean> {
+    if (!ensureSdk()) return false
+    await sdk.startAcquisition(Fingerprint.SampleFormat.Raw)
+    return true
+  }
+
+  async function checkReader(): Promise<FingerprintEvent> {
+    try {
+      if (!ensureSdk()) {
+        connected.value = false
+        return {
+          event: 'error',
+          message: 'No se pudo iniciar el SDK de huella. Verifica DigitalPersona WebSDK.',
+        }
+      }
       const devices = await sdk.enumerateDevices()
       connected.value = Array.isArray(devices) && devices.length > 0
 
@@ -209,28 +232,45 @@ export function useFingerprint() {
   }
 
   async function capture(): Promise<FingerprintEvent> {
-    createSdk()
+    if (!ensureSdk()) {
+      return { event: 'error', message: 'No se pudo iniciar el SDK de huella. Verifica DigitalPersona WebSDK.' }
+    }
+
     busy.value = true
     mode = 'capture'
     samples = []
     setStatus('Coloca tu dedo en el lector...')
-    await sdk.startAcquisition(Fingerprint.SampleFormat.Raw)
+    if (!(await startAcquisition())) {
+      busy.value = false
+      mode = null
+      return { event: 'error', message: 'No se pudo conectar con el lector. Verifica DigitalPersona WebSDK.' }
+    }
     return new Promise(resolve => { resolveAction = resolve })
   }
 
   async function enroll(memberId: number | null, apiUrl: string, token: string): Promise<FingerprintEvent> {
-    createSdk()
+    if (!ensureSdk()) {
+      return { event: 'error', message: 'No se pudo iniciar el SDK de huella. Verifica DigitalPersona WebSDK.' }
+    }
+
     busy.value = true
     mode = 'enroll'
     samples = []
     enrollTarget = memberId ? { memberId, apiUrl, token } : null
     setStatus('Coloca tu dedo en el lector (4 veces)...')
-    await sdk.startAcquisition(Fingerprint.SampleFormat.Raw)
+    if (!(await startAcquisition())) {
+      busy.value = false
+      mode = null
+      return { event: 'error', message: 'No se pudo conectar con el lector. Verifica DigitalPersona WebSDK.' }
+    }
     return new Promise(resolve => { resolveAction = resolve })
   }
 
   async function identify(gimnasioId: number, apiUrl: string): Promise<FingerprintEvent> {
-    createSdk()
+    if (!ensureSdk()) {
+      return { event: 'error', message: 'No se pudo iniciar el SDK de huella. Verifica DigitalPersona WebSDK.' }
+    }
+
     busy.value = true
     setStatus('Cargando base de datos de huellas...')
 
@@ -280,7 +320,11 @@ export function useFingerprint() {
     mode = 'identify'
     samples = []
     setStatus('Coloca tu dedo en el lector...')
-    await sdk.startAcquisition(Fingerprint.SampleFormat.Raw)
+    if (!(await startAcquisition())) {
+      busy.value = false
+      mode = null
+      return { event: 'error', message: 'No se pudo conectar con el lector. Verifica DigitalPersona WebSDK.' }
+    }
     return new Promise(resolve => { resolveAction = resolve })
   }
 
