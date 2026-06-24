@@ -30,6 +30,8 @@ $settings = New-ScheduledTaskSettingsSet `
     -MultipleInstances IgnoreNew `
     -RestartCount 3 `
     -RestartInterval (New-TimeSpan -Minutes 1)
+$settings.DisallowStartIfOnBatteries = $false
+$settings.StopIfGoingOnBatteries = $false
 
 Register-ScheduledTask `
     -TaskName $taskName `
