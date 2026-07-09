@@ -113,8 +113,8 @@
                   {{ (member.name || "?").charAt(0).toUpperCase() }}
                 </div>
               </div>
-              <div class="min-w-0">
-                <h2 class="text-base font-bold text-default truncate">{{ member.name }}</h2>
+              <div class="min-w-0 flex-1">
+                <h2 class="text-base font-bold text-default whitespace-normal break-words leading-snug">{{ member.name }}</h2>
                 <p class="text-sm text-muted mt-0.5 truncate">{{ member.email || "Sin correo electrónico" }}</p>
                 <p class="text-xs text-subtle mt-0.5">{{ member.identification ? `C.C ${member.identification}` : "C.C —" }}</p>
               </div>
@@ -689,6 +689,7 @@ function membershipDaysClass(member) {
   align-items: center;
   gap: 0.7rem;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .member-avatar-wrap {
