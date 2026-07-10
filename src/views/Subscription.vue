@@ -105,18 +105,20 @@
         </div>
 
         <!-- Planes disponibles -->
-        <div v-if="!subscription || showPlans">
+        <div v-if="plansVisible">
           <h3 class="text-lg font-bold text-default mb-4">
-            {{ subscription ? 'Cambiar a otro plan' : 'Elige un plan' }}
+            {{ subscription && !isSubscriptionInactive ? 'Cambiar a otro plan' : 'Elige un plan' }}
           </h3>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div
               v-for="plan in plans"
               :key="plan.id"
-              class="bg-[var(--color-surface)] rounded-2xl shadow border-2 p-5 flex flex-col gap-4 transition cursor-pointer"
-              :class="subscription?.plan?.id === plan.id
-                ? 'border-blue-500 ring-2 ring-blue-200'
-                : 'border-transparent hover:border-blue-300'"
+              class="bg-[var(--color-surface)] rounded-2xl shadow border-2 p-5 flex flex-col gap-4 transition"
+              :class="isCurrentPlan(plan)
+                ? 'border-slate-300 opacity-60 cursor-not-allowed bg-slate-50'
+                : 'border-transparent hover:border-blue-300 cursor-pointer'"
+              :aria-disabled="isCurrentPlan(plan)"
+              @click="handlePlanCardClick(plan)"
             >
               <div>
                 <p class="text-xs font-bold uppercase tracking-widest text-subtle mb-1">Plan</p>
@@ -139,22 +141,22 @@
               </ul>
 
               <button
-                v-if="subscription?.plan?.id !== plan.id"
-                @click="selectPlan(plan)"
+                v-if="!isCurrentPlan(plan)"
+                @click.stop="selectPlan(plan)"
                 :disabled="saving"
                 class="btn btn-primary text-sm py-2 inline-flex items-center justify-center gap-2"
               >
                 <Package class="w-4 h-4" aria-hidden="true" />
-                <span>{{ subscription ? 'Cambiar a este' : 'Suscribirme' }}</span>
+                <span>{{ planButtonLabel }}</span>
               </button>
-              <div v-else class="text-center text-xs font-bold text-blue-600 py-2 flex items-center justify-center gap-1">
+              <div v-else class="text-center text-xs font-bold text-slate-500 py-2 flex items-center justify-center gap-1">
                 <CheckCircle2 class="w-4 h-4" aria-hidden="true" />
-                Plan actual
+                {{ isSubscriptionInactive ? 'Plan anterior no disponible' : 'Plan actual' }}
               </div>
             </div>
           </div>
 
-          <button v-if="showPlans" @click="showPlans = false" class="mt-4 text-sm text-slate-400 hover:text-slate-600">
+          <button v-if="showPlans && !isSubscriptionInactive" @click="showPlans = false" class="mt-4 text-sm text-slate-400 hover:text-slate-600">
             Cancelar
           </button>
         </div>
@@ -167,6 +169,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import api from '@/axios'
+import { useSubscriptionStore } from '@/stores/useSubscriptionStore'
 import Swal from 'sweetalert2'
 import dayjs from 'dayjs'
 import { SWAL_COLORS } from '@/lib/colors'
@@ -190,6 +193,7 @@ const showPlans = ref(false)
 
 const subscription = ref<any>(null)
 const plans        = ref<any[]>([])
+const subscriptionStore = useSubscriptionStore()
 
 const featureNames: Record<string, string> = {
   'members':           'Miembros',
@@ -215,8 +219,17 @@ function formatPrice(price: number) {
 }
 
 const daysLeft = computed(() => {
+  if (
+    subscription.value?.days_left !== null &&
+    subscription.value?.days_left !== undefined &&
+    subscription.value?.days_left !== ''
+  ) {
+    const value = Number(subscription.value.days_left)
+    if (Number.isFinite(value)) return Math.ceil(value)
+  }
+
   if (!subscription.value?.expired_at) return 0
-  return dayjs(subscription.value.expired_at).diff(dayjs(), 'day')
+  return Math.ceil(dayjs(subscription.value.expired_at).diff(dayjs(), 'day', true))
 })
 
 const statusBadge = computed(() => {
@@ -234,12 +247,37 @@ const statusLabel = computed(() => {
   return 'Activa'
 })
 
+const isSubscriptionInactive = computed(() => {
+  if (!subscription.value) return false
+  const status = String(subscription.value.status ?? '').trim().toLowerCase()
+  return Boolean(subscription.value.canceled_at)
+    || subscription.value.is_active === false
+    || subscription.value.active === false
+    || daysLeft.value < 0
+    || ['expired', 'canceled', 'cancelled', 'inactive', 'vencida'].includes(status)
+})
+
+const plansVisible = computed(() => !subscription.value || showPlans.value || isSubscriptionInactive.value)
+
+const planButtonLabel = computed(() => subscription.value && !isSubscriptionInactive.value ? 'Cambiar a este' : 'Activar este plan')
+
+function isCurrentPlan(plan: any) {
+  return subscription.value?.plan?.id === plan.id
+}
+
+function handlePlanCardClick(plan: any) {
+  if (isCurrentPlan(plan) || saving.value) return
+  selectPlan(plan)
+}
+
 async function load() {
   const [subRes, plansRes] = await Promise.all([
     api.get('/subscription').catch(() => ({ data: { subscription: null } })),
     api.get('/subscription-plans'),
   ])
   subscription.value = subRes.data.subscription
+  subscriptionStore.subscription = subscription.value
+  subscriptionStore.loaded = true
   plans.value        = plansRes.data
 }
 

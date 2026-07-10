@@ -23,14 +23,15 @@
           :id="navTargetId(item.to)"
           :to="item.to"
           class="sidebar-item"
-          :class="{ 'sidebar-item--active': isActive(item.to) }"
+          :class="{ 'sidebar-item--active': isActive(item.to), 'sidebar-item--locked': isLocked(item.to) }"
           :style="{ '--accent': item.color }"
-          @click="sidebarOpen = false; adminOpen = false"
+          @click="handleNavClick($event, item.to)"
         >
           <div class="sidebar-icon-wrap" aria-hidden="true">
             <component :is="item.icon" class="w-4 h-4" />
           </div>
           <span class="sidebar-item-label">{{ item.label }}</span>
+          <Lock v-if="isLocked(item.to)" class="w-3.5 h-3.5 ml-auto" aria-hidden="true" />
         </router-link>
       </nav>
 
@@ -127,10 +128,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { useSubscriptionStore } from '@/stores/useSubscriptionStore'
 import { useTheme } from '@/composables/useTheme'
 import Swal from 'sweetalert2'
 import {
@@ -154,11 +156,13 @@ import {
   Menu,
   X,
   Download,
+  Lock,
 } from 'lucide-vue-next'
 
 const route  = useRoute()
 const router = useRouter()
 const auth   = useAuthStore()
+const subscriptionStore = useSubscriptionStore()
 
 const { isDark, toggleTheme } = useTheme()
 
@@ -185,6 +189,106 @@ const installPwa = async () => {
 onMounted(() => window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt))
 onBeforeUnmount(() => window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt))
 
+const getSubscriptionDaysLeft = (subscription: Record<string, any> | null) => {
+  if (!subscription) return null
+
+  if (subscription.days_left !== null && subscription.days_left !== undefined && subscription.days_left !== '') {
+    const daysLeft = Number(subscription.days_left)
+    if (Number.isFinite(daysLeft)) return Math.ceil(daysLeft)
+  }
+
+  if (!subscription.expired_at) return null
+
+  const expiresAt = new Date(subscription.expired_at).getTime()
+  if (Number.isNaN(expiresAt)) return null
+
+  return Math.ceil((expiresAt - Date.now()) / 86400000)
+}
+
+const getSubscriptionWarningKey = (subscription: Record<string, any>, daysLeft: number) => {
+  const subscriptionId = subscription.id ?? subscription.uuid ?? subscription.subscription_id ?? subscription.expired_at ?? 'current'
+
+  return `subscription-expiry-warning:${subscriptionId}:days-left-${daysLeft}`
+}
+
+const showSubscriptionExpiryWarning = (daysLeft: number) => {
+  Swal.fire({
+    icon: 'warning',
+    title: 'Suscripci\u00f3n por vencer',
+    text: daysLeft === 1
+      ? 'Tu suscripci\u00f3n vence ma\u00f1ana. Renu\u00e9vala para evitar bloqueos.'
+      : 'Tu suscripci\u00f3n vence en 2 d\u00edas. Renu\u00e9vala para evitar bloqueos.',
+    confirmButtonText: 'Ir a suscripci\u00f3n',
+    showCancelButton: true,
+    cancelButtonText: 'M\u00e1s tarde',
+    heightAuto: false,
+  }).then((result) => {
+    if (result.isConfirmed) router.push('/subscription')
+  })
+}
+
+const warnIfSubscriptionExpiresSoon = () => {
+  const subscription = subscriptionStore.subscription
+
+  if (!subscription || !subscriptionStore.hasActiveSubscription) return
+
+  const daysLeft = getSubscriptionDaysLeft(subscription)
+  if (daysLeft === null || daysLeft < 1 || daysLeft > 2) return
+
+  const storageKey = getSubscriptionWarningKey(subscription, daysLeft)
+  if (localStorage.getItem(storageKey)) return
+
+  localStorage.setItem(storageKey, 'shown')
+  showSubscriptionExpiryWarning(daysLeft)
+}
+
+const refreshSubscriptionAndWarn = async () => {
+  if (!auth.token) return
+
+  await subscriptionStore.loadSubscription()
+
+  if (
+    subscriptionStore.loaded &&
+    !subscriptionStore.hasActiveSubscription &&
+    !isSubscriptionRoute(route.path) &&
+    !isMenuRoute(route.path)
+  ) {
+    await router.replace('/subscription')
+    return
+  }
+
+  warnIfSubscriptionExpiresSoon()
+}
+
+const onWindowFocus = () => {
+  void refreshSubscriptionAndWarn()
+}
+
+const onVisibilityChange = () => {
+  if (document.visibilityState === 'visible') {
+    void refreshSubscriptionAndWarn()
+  }
+}
+
+onMounted(async () => {
+  window.addEventListener('focus', onWindowFocus)
+  document.addEventListener('visibilitychange', onVisibilityChange)
+
+  await refreshSubscriptionAndWarn()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('focus', onWindowFocus)
+  document.removeEventListener('visibilitychange', onVisibilityChange)
+})
+
+watch(
+  () => route.path,
+  () => {
+    void refreshSubscriptionAndWarn()
+  },
+)
+
 const sidebarOpen = ref(false)
 const adminOpen   = ref(false)
 
@@ -197,6 +301,40 @@ const navTargetId = (to: string) =>
 
 const isActive = (to: string) =>
   route.path.toLowerCase() === to.toLowerCase()
+
+const isSubscriptionRoute = (to: string) =>
+  to.toLowerCase().startsWith('/subscription')
+
+const isMenuRoute = (to: string) =>
+  to.toLowerCase() === '/menu'
+
+const isLocked = (to: string) =>
+  subscriptionStore.loaded && !subscriptionStore.hasActiveSubscription && !isSubscriptionRoute(to) && !isMenuRoute(to)
+
+const showSubscriptionLock = () => {
+  Swal.fire({
+    icon: 'warning',
+    title: 'Suscripción requerida',
+    text: 'Activá tu suscripción para acceder a este módulo.',
+    confirmButtonText: 'Ir a suscripción',
+    showCancelButton: true,
+    cancelButtonText: 'Cancelar',
+    heightAuto: false,
+  }).then((result) => {
+    if (result.isConfirmed) router.push('/subscription')
+  })
+}
+
+const handleNavClick = (event: MouseEvent, to: string) => {
+  if (isLocked(to)) {
+    event.preventDefault()
+    event.stopPropagation()
+    showSubscriptionLock()
+    return
+  }
+  sidebarOpen.value = false
+  adminOpen.value = false
+}
 
 const navItems = [
   { to: '/menu',            label: 'Dashboard',      color: '#6366f1', icon: LayoutDashboard },
@@ -233,3 +371,14 @@ const confirmLogout = async () => {
   }
 }
 </script>
+
+<style scoped>
+.sidebar-item--locked {
+  opacity: 0.55;
+  filter: grayscale(0.35);
+}
+
+.sidebar-item--locked:hover {
+  background: rgba(245, 158, 11, 0.12);
+}
+</style>

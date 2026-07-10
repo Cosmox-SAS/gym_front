@@ -82,6 +82,19 @@ api.interceptors.response.use(
         text: "Ocurrió un error en el servidor. Por favor, intenta nuevamente más tarde.",
         confirmButtonColor: SWAL_COLORS.danger,
       });
+    } else if (status === 402) {
+      const currentPath = window.location.pathname;
+
+      if (currentPath !== "/subscription") {
+        Swal.fire({
+          icon: "warning",
+          title: "Suscripción requerida",
+          text: error.response.data?.message ?? "Tu suscripción está vencida o inactiva. Renueva tu plan para continuar.",
+          confirmButtonColor: SWAL_COLORS.warning,
+        }).then(() => {
+          window.location.href = "/subscription";
+        });
+      }
     } else if (status === 403) {
       // Prohibido
       Swal.fire({

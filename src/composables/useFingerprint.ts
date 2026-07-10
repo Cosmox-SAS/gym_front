@@ -28,6 +28,7 @@ export function useFingerprint() {
   let enrollTarget: { memberId: number; apiUrl: string; token: string } | null = null
   let identifyCandidates: Array<{ id: string; template: string; member: any }> = []
   let identifyApiUrl = ''
+  let identifyGymId: number | null = null
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
@@ -156,7 +157,7 @@ export function useFingerprint() {
             const logResp = await fetch(`${identifyApiUrl}/access/fingerprint`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-              body: JSON.stringify({ member_id: matchData.member_id }),
+              body: JSON.stringify({ gimnasio_id: identifyGymId, member_id: matchData.member_id }),
             })
             const logText = await logResp.text()
             const logData = logText ? JSON.parse(logText) : {}
@@ -312,6 +313,7 @@ export function useFingerprint() {
 
       identifyCandidates = membersData.map(m => ({ id: String(m.id), template: m.fingerprint_data, member: m }))
       identifyApiUrl = apiUrl
+      identifyGymId = gimnasioId
     } catch (e: any) {
       busy.value = false
       return { event: 'error', message: e.message || 'No se pudo cargar la base de datos de huellas' }

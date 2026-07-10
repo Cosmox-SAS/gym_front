@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import { useSubscriptionStore } from "@/stores/useSubscriptionStore";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -150,11 +151,31 @@ const router = createRouter({
 });
 
 // Guardia global de autenticación
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const isAuthenticated = !!localStorage.getItem("token");
 
   if (to.meta.requiresAuth && !isAuthenticated) {
     next({ name: "Login" });
+  } else if (to.meta.requiresAuth) {
+    const subscriptionStore = useSubscriptionStore();
+    const path = to.path.toLowerCase();
+    const isSubscriptionRoute = path.startsWith("/subscription");
+    const isMenuRoute = path === "/menu";
+
+    if (!isSubscriptionRoute) {
+      await subscriptionStore.loadSubscription();
+    }
+
+    if (
+      subscriptionStore.loaded &&
+      !subscriptionStore.hasActiveSubscription &&
+      !isSubscriptionRoute &&
+      !isMenuRoute
+    ) {
+      next({ name: "Subscription" });
+    } else {
+      next();
+    }
   } else {
     next();
   }

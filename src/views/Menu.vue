@@ -41,7 +41,9 @@
         <router-link
           to="/Membership?filter=expired"
           class="stat-card cursor-pointer block"
+          :class="{ 'module-locked': moduleLocked }"
           style="background:linear-gradient(135deg,#dc2626 0%,#991b1b 100%)"
+          @click="handleLockedClick"
         >
           <div class="flex items-start justify-between mb-4">
             <p class="stat-tag" style="color:rgba(254,202,202,0.85)">Vencidos</p>
@@ -54,7 +56,9 @@
         <router-link
           to="/Membership?filter=inactive_unpaid"
           class="stat-card cursor-pointer block"
+          :class="{ 'module-locked': moduleLocked }"
           style="background:linear-gradient(135deg,#d97706 0%,#92400e 100%)"
+          @click="handleLockedClick"
         >
           <div class="flex items-start justify-between mb-4">
             <p class="stat-tag" style="color:rgba(253,230,138,0.85)">Por Pagar</p>
@@ -67,7 +71,9 @@
         <router-link
           to="/Membership?filter=expiring_soon"
           class="stat-card cursor-pointer block"
+          :class="{ 'module-locked': moduleLocked }"
           style="background:linear-gradient(135deg,#2563eb 0%,#3730a3 100%)"
+          @click="handleLockedClick"
         >
           <div class="flex items-start justify-between mb-4">
             <p class="stat-tag" style="color:rgba(191,219,254,0.85)">Vencen Pronto</p>
@@ -87,10 +93,13 @@
             :key="i"
             :to="item.to"
             class="quick-card group marquee-card"
+            :class="{ 'module-locked': isQuickItemLocked(item.to) }"
             :style="{ '--qc': item.color }"
+            @click="handleQuickClick($event, item.to)"
           >
             <component :is="item.icon" class="w-6 h-6 mb-2" aria-hidden="true" />
             <span class="quick-label">{{ item.label }}</span>
+            <Lock v-if="isQuickItemLocked(item.to)" class="w-4 h-4 mt-1" aria-hidden="true" />
           </router-link>
         </div>
       </div>
@@ -101,7 +110,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { useSubscriptionStore } from '@/stores/useSubscriptionStore'
 import api from '@/axios'
 import Swal from 'sweetalert2'
 import { formatAppDate } from '@/lib/dates'
@@ -114,20 +125,27 @@ import {
   Users,
   CalendarCheck2,
   BadgeDollarSign,
+  Package,
+  Lock,
 } from 'lucide-vue-next'
 const quickItemsBase = [
   { to: '/pos',        label: 'Punto de Venta', color: '#6366f1', icon: ShoppingCart },
   { to: '/members',    label: 'Clientes',       color: '#34d399', icon: Users },
   { to: '/Membership', label: 'Membresías',     color: '#38bdf8', icon: CalendarCheck2 },
   { to: '/CashBox',    label: 'Caja',           color: '#2dd4bf', icon: BadgeDollarSign },
+  { to: '/subscription', label: 'Suscripción',  color: '#34d399', icon: Package },
 ]
 // Duplicamos exactamente una vez. Con translateX(-50%) la animación cae
 // justo donde empieza la 2da copia, así el loop es invisible.
 const quickItemsRepeated = [...quickItemsBase, ...quickItemsBase]
 
 const auth  = useAuthStore()
+const router = useRouter()
+const subscriptionStore = useSubscriptionStore()
 const user  = auth.user
 const stats = ref<Record<string, number>>({})
+
+const moduleLocked = computed(() => subscriptionStore.loaded && !subscriptionStore.hasActiveSubscription)
 
 const greeting = computed(() => {
   const h = new Date().getHours()
@@ -145,7 +163,44 @@ const today = computed(() => {
   }).format(new Date())
 })
 
+const isSubscriptionRoute = (to: string) =>
+  to.toLowerCase().startsWith('/subscription')
+
+const isQuickItemLocked = (to: string) =>
+  moduleLocked.value && !isSubscriptionRoute(to)
+
+function showSubscriptionLock() {
+  Swal.fire({
+    icon: 'warning',
+    title: 'Suscripción requerida',
+    text: 'Activá tu suscripción para usar este módulo.',
+    confirmButtonText: 'Ir a suscripción',
+    showCancelButton: true,
+    cancelButtonText: 'Cancelar',
+    heightAuto: false,
+  }).then((result) => {
+    if (result.isConfirmed) router.push('/subscription')
+  })
+}
+
+function handleLockedClick(event: MouseEvent) {
+  if (!moduleLocked.value) return
+  event.preventDefault()
+  event.stopPropagation()
+  showSubscriptionLock()
+}
+
+function handleQuickClick(event: MouseEvent, to: string) {
+  if (!isQuickItemLocked(to)) return
+  event.preventDefault()
+  event.stopPropagation()
+  showSubscriptionLock()
+}
+
 onMounted(async () => {
+  await subscriptionStore.loadSubscription()
+  if (!subscriptionStore.hasActiveSubscription) return
+
   try {
     const { data } = await api.get('/memberships/stats')
     stats.value = data
@@ -186,6 +241,17 @@ onMounted(async () => {
   flex: 0 0 auto;
   width: 16rem;
 }
+
+.module-locked {
+  opacity: 0.6;
+  filter: grayscale(0.35);
+}
+
+.quick-card.module-locked:hover {
+  transform: none;
+  background: rgba(245, 158, 11, 0.08);
+}
+
 @media (min-width: 640px) {
   .marquee-card { width: 18rem; }
 }
