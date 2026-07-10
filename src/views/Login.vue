@@ -86,7 +86,7 @@ const handleLogin = async () => {
     auth.setUser(user)
     localStorage.setItem('token', access_token)
     localStorage.setItem('user', JSON.stringify(user))
-    router.push('/Menu')
+    router.push({ name: 'Menu' })
   } catch {
     password.value = ''
     Swal.fire({

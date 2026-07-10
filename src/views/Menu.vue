@@ -43,7 +43,7 @@
           class="stat-card cursor-pointer block"
           :class="{ 'module-locked': moduleLocked }"
           style="background:linear-gradient(135deg,#dc2626 0%,#991b1b 100%)"
-          @click="handleLockedClick"
+          @click="handleProtectedClick($event, '/Membership?filter=expired')"
         >
           <div class="flex items-start justify-between mb-4">
             <p class="stat-tag" style="color:rgba(254,202,202,0.85)">Vencidos</p>
@@ -58,7 +58,7 @@
           class="stat-card cursor-pointer block"
           :class="{ 'module-locked': moduleLocked }"
           style="background:linear-gradient(135deg,#d97706 0%,#92400e 100%)"
-          @click="handleLockedClick"
+          @click="handleProtectedClick($event, '/Membership?filter=inactive_unpaid')"
         >
           <div class="flex items-start justify-between mb-4">
             <p class="stat-tag" style="color:rgba(253,230,138,0.85)">Por Pagar</p>
@@ -73,7 +73,7 @@
           class="stat-card cursor-pointer block"
           :class="{ 'module-locked': moduleLocked }"
           style="background:linear-gradient(135deg,#2563eb 0%,#3730a3 100%)"
-          @click="handleLockedClick"
+          @click="handleProtectedClick($event, '/Membership?filter=expiring_soon')"
         >
           <div class="flex items-start justify-between mb-4">
             <p class="stat-tag" style="color:rgba(191,219,254,0.85)">Vencen Pronto</p>
@@ -95,7 +95,7 @@
             class="quick-card group marquee-card"
             :class="{ 'module-locked': isQuickItemLocked(item.to) }"
             :style="{ '--qc': item.color }"
-            @click="handleQuickClick($event, item.to)"
+            @click="handleProtectedClick($event, item.to)"
           >
             <component :is="item.icon" class="w-6 h-6 mb-2" aria-hidden="true" />
             <span class="quick-label">{{ item.label }}</span>
@@ -144,6 +144,7 @@ const router = useRouter()
 const subscriptionStore = useSubscriptionStore()
 const user  = auth.user
 const stats = ref<Record<string, number>>({})
+const subscriptionLockModalOpen = ref(false)
 
 const moduleLocked = computed(() => subscriptionStore.loaded && !subscriptionStore.hasActiveSubscription)
 
@@ -163,14 +164,23 @@ const today = computed(() => {
   }).format(new Date())
 })
 
+const getRoutePath = (to: string) =>
+  to.split(/[?#]/)[0].toLowerCase()
+
 const isSubscriptionRoute = (to: string) =>
-  to.toLowerCase().startsWith('/subscription')
+  getRoutePath(to).startsWith('/subscription')
+
+const requiresSubscription = (to: string) =>
+  !isSubscriptionRoute(to)
 
 const isQuickItemLocked = (to: string) =>
-  moduleLocked.value && !isSubscriptionRoute(to)
+  moduleLocked.value && requiresSubscription(to)
 
-function showSubscriptionLock() {
-  Swal.fire({
+async function showSubscriptionLock() {
+  if (subscriptionLockModalOpen.value) return false
+
+  subscriptionLockModalOpen.value = true
+  const result = await Swal.fire({
     icon: 'warning',
     title: 'Suscripción requerida',
     text: 'Activá tu suscripción para usar este módulo.',
@@ -178,28 +188,39 @@ function showSubscriptionLock() {
     showCancelButton: true,
     cancelButtonText: 'Cancelar',
     heightAuto: false,
-  }).then((result) => {
-    if (result.isConfirmed) router.push('/subscription')
   })
+  subscriptionLockModalOpen.value = false
+
+  if (result.isConfirmed) {
+    await router.push('/subscription')
+    return true
+  }
+
+  return false
 }
 
-function handleLockedClick(event: MouseEvent) {
-  if (!moduleLocked.value) return
-  event.preventDefault()
-  event.stopPropagation()
-  showSubscriptionLock()
-}
+async function handleProtectedClick(event: MouseEvent, to: string) {
+  if (!requiresSubscription(to)) return
 
-function handleQuickClick(event: MouseEvent, to: string) {
-  if (!isQuickItemLocked(to)) return
   event.preventDefault()
   event.stopPropagation()
-  showSubscriptionLock()
+
+  await subscriptionStore.loadSubscription()
+
+  if (!subscriptionStore.hasActiveSubscription) {
+    await showSubscriptionLock()
+    return
+  }
+
+  await router.push(to)
 }
 
 onMounted(async () => {
   await subscriptionStore.loadSubscription()
-  if (!subscriptionStore.hasActiveSubscription) return
+  if (!subscriptionStore.hasActiveSubscription) {
+    await showSubscriptionLock()
+    return
+  }
 
   try {
     const { data } = await api.get('/memberships/stats')

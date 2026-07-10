@@ -257,7 +257,10 @@ const refreshSubscriptionAndWarn = async () => {
     !isSubscriptionRoute(route.path) &&
     !isMenuRoute(route.path)
   ) {
-    await router.replace('/subscription')
+    const wentToSubscription = await showSubscriptionLock()
+    if (!wentToSubscription) {
+      await router.replace('/menu')
+    }
     return
   }
 
@@ -295,6 +298,7 @@ watch(
 
 const sidebarOpen = ref(false)
 const adminOpen   = ref(false)
+const subscriptionLockModalOpen = ref(false)
 
 const user        = auth.user
 const userName    = computed(() => user?.name || 'Usuario')
@@ -306,17 +310,26 @@ const navTargetId = (to: string) =>
 const isActive = (to: string) =>
   route.path.toLowerCase() === to.toLowerCase()
 
+const getRoutePath = (to: string) =>
+  to.split(/[?#]/)[0].toLowerCase()
+
 const isSubscriptionRoute = (to: string) =>
-  to.toLowerCase().startsWith('/subscription')
+  getRoutePath(to).startsWith('/subscription')
 
 const isMenuRoute = (to: string) =>
-  to.toLowerCase() === '/menu'
+  getRoutePath(to) === '/menu'
+
+const requiresSubscription = (to: string) =>
+  !isSubscriptionRoute(to) && !isMenuRoute(to)
 
 const isLocked = (to: string) =>
-  subscriptionStore.loaded && !subscriptionStore.hasActiveSubscription && !isSubscriptionRoute(to) && !isMenuRoute(to)
+  subscriptionStore.loaded && !subscriptionStore.hasActiveSubscription && requiresSubscription(to)
 
-const showSubscriptionLock = () => {
-  Swal.fire({
+const showSubscriptionLock = async () => {
+  if (subscriptionLockModalOpen.value) return false
+
+  subscriptionLockModalOpen.value = true
+  const result = await Swal.fire({
     icon: 'warning',
     title: 'Suscripción requerida',
     text: 'Activá tu suscripción para acceder a este módulo.',
@@ -324,18 +337,35 @@ const showSubscriptionLock = () => {
     showCancelButton: true,
     cancelButtonText: 'Cancelar',
     heightAuto: false,
-  }).then((result) => {
-    if (result.isConfirmed) router.push('/subscription')
   })
+  subscriptionLockModalOpen.value = false
+
+  if (result.isConfirmed) {
+    await router.push('/subscription')
+    return true
+  }
+
+  return false
 }
 
-const handleNavClick = (event: MouseEvent, to: string) => {
-  if (isLocked(to)) {
-    event.preventDefault()
-    event.stopPropagation()
-    showSubscriptionLock()
+const handleNavClick = async (event: MouseEvent, to: string) => {
+  if (!requiresSubscription(to)) {
+    sidebarOpen.value = false
+    adminOpen.value = false
     return
   }
+
+  event.preventDefault()
+  event.stopPropagation()
+
+  await subscriptionStore.loadSubscription()
+
+  if (!subscriptionStore.hasActiveSubscription) {
+    await showSubscriptionLock()
+    return
+  }
+
+  await router.push(to)
   sidebarOpen.value = false
   adminOpen.value = false
 }

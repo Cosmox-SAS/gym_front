@@ -121,7 +121,7 @@ const register = async () => {
       confirmButtonText: 'Continuar',
       confirmButtonColor: '#dc2626',
     })
-    router.push('/Menu')
+    router.push({ name: 'Menu' })
   } catch (error: any) {
     Swal.fire({
       title: 'Error en el registro',

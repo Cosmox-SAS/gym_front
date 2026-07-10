@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useSubscriptionStore } from "@/stores/useSubscriptionStore";
+import Swal from "sweetalert2";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -172,10 +173,30 @@ router.beforeEach(async (to, from, next) => {
       !isSubscriptionRoute &&
       !isMenuRoute
     ) {
-      next({ name: "Subscription" });
-    } else {
-      next();
+      const result = await Swal.fire({
+        icon: "warning",
+        title: "Suscripción requerida",
+        text: "Activá tu suscripción para acceder a este módulo.",
+        confirmButtonText: "Ir a suscripción",
+        showCancelButton: true,
+        cancelButtonText: "Cancelar",
+        heightAuto: false,
+      });
+
+      if (result.isConfirmed) {
+        next({ name: "Subscription" });
+        return;
+      }
+
+      if (from.name) {
+        next(false);
+      } else {
+        next({ name: "Menu" });
+      }
+      return;
     }
+
+    next();
   } else {
     next();
   }

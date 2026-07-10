@@ -86,9 +86,13 @@
 
           <!-- Acciones -->
           <div class="flex flex-col sm:flex-row gap-3 mt-6 pt-4 border-t">
-            <button @click="showPlans = true" class="btn btn-primary flex-1 inline-flex items-center justify-center gap-2">
+            <button
+              @click="showPlans = true"
+              :disabled="isPlanActivationBlocked"
+              class="btn btn-primary flex-1 inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <RefreshCw class="w-4 h-4" aria-hidden="true" />
-              <span>Cambiar plan</span>
+              <span>{{ isPlanActivationBlocked ? 'Planes bloqueados' : 'Cambiar plan' }}</span>
             </button>
             <button
               v-if="!subscription.canceled_at"
@@ -106,6 +110,10 @@
 
         <!-- Planes disponibles -->
         <div v-if="plansVisible">
+          <div v-if="isPlanActivationBlocked" class="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            Tu suscripción está vencida. No puedes activar ningún plan.
+          </div>
+
           <h3 class="text-lg font-bold text-default mb-4">
             {{ subscription && !isSubscriptionInactive ? 'Cambiar a otro plan' : 'Elige un plan' }}
           </h3>
@@ -114,10 +122,10 @@
               v-for="plan in plans"
               :key="plan.id"
               class="bg-[var(--color-surface)] rounded-2xl shadow border-2 p-5 flex flex-col gap-4 transition"
-              :class="isCurrentPlan(plan)
+              :class="isCurrentPlan(plan) || isPlanActivationBlocked
                 ? 'border-slate-300 opacity-60 cursor-not-allowed bg-slate-50'
                 : 'border-transparent hover:border-blue-300 cursor-pointer'"
-              :aria-disabled="isCurrentPlan(plan)"
+              :aria-disabled="isCurrentPlan(plan) || isPlanActivationBlocked"
               @click="handlePlanCardClick(plan)"
             >
               <div>
@@ -143,8 +151,8 @@
               <button
                 v-if="!isCurrentPlan(plan)"
                 @click.stop="selectPlan(plan)"
-                :disabled="saving"
-                class="btn btn-primary text-sm py-2 inline-flex items-center justify-center gap-2"
+                :disabled="saving || isPlanActivationBlocked"
+                class="btn btn-primary text-sm py-2 inline-flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Package class="w-4 h-4" aria-hidden="true" />
                 <span>{{ planButtonLabel }}</span>
@@ -259,14 +267,19 @@ const isSubscriptionInactive = computed(() => {
 
 const plansVisible = computed(() => !subscription.value || showPlans.value || isSubscriptionInactive.value)
 
-const planButtonLabel = computed(() => subscription.value && !isSubscriptionInactive.value ? 'Cambiar a este' : 'Activar este plan')
+const isPlanActivationBlocked = computed(() => Boolean(subscription.value && isSubscriptionInactive.value))
+
+const planButtonLabel = computed(() => {
+  if (isPlanActivationBlocked.value) return 'No disponible'
+  return subscription.value ? 'Cambiar a este' : 'Activar este plan'
+})
 
 function isCurrentPlan(plan: any) {
   return subscription.value?.plan?.id === plan.id
 }
 
 function handlePlanCardClick(plan: any) {
-  if (isCurrentPlan(plan) || saving.value) return
+  if (isCurrentPlan(plan) || saving.value || isPlanActivationBlocked.value) return
   selectPlan(plan)
 }
 
@@ -282,6 +295,11 @@ async function load() {
 }
 
 async function selectPlan(plan: any) {
+  if (isPlanActivationBlocked.value) {
+    Swal.fire('Suscripción vencida', 'No puedes activar ningún plan.', 'warning')
+    return
+  }
+
   saving.value = true
   try {
     if (subscription.value) {
