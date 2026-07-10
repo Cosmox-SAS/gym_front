@@ -234,7 +234,7 @@ const daysLeft = computed(() => {
 
 const statusBadge = computed(() => {
   if (!subscription.value) return ''
-  if (subscription.value.canceled_at) return 'bg-red-100 text-red-700'
+  if (subscription.value.canceled_at || isSubscriptionInactive.value) return 'bg-red-100 text-red-700'
   if (daysLeft.value <= 5) return 'bg-amber-100 text-amber-700'
   return 'bg-emerald-100 text-emerald-700'
 })
@@ -242,7 +242,7 @@ const statusBadge = computed(() => {
 const statusLabel = computed(() => {
   if (!subscription.value) return ''
   if (subscription.value.canceled_at) return 'Cancelada'
-  if (daysLeft.value < 0) return 'Vencida'
+  if (isSubscriptionInactive.value) return 'Vencida'
   if (daysLeft.value <= 5) return 'Por vencer'
   return 'Activa'
 })

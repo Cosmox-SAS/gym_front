@@ -206,9 +206,13 @@ const getSubscriptionDaysLeft = (subscription: Record<string, any> | null) => {
 }
 
 const getSubscriptionWarningKey = (subscription: Record<string, any>, daysLeft: number) => {
-  const subscriptionId = subscription.id ?? subscription.uuid ?? subscription.subscription_id ?? subscription.expired_at ?? 'current'
+  const subscriptionId = subscription.id ?? subscription.uuid ?? subscription.subscription_id ?? 'current'
 
-  return `subscription-expiry-warning:${subscriptionId}:days-left-${daysLeft}`
+  // Incluir expired_at en la clave: si la fecha de vencimiento cambia (ej. ajuste
+  // manual en la BD), se considera un estado nuevo y el recordatorio vuelve a salir.
+  const expiresStamp = subscription.expired_at ?? subscription.expires_at ?? 'na'
+
+  return `subscription-expiry-warning:${subscriptionId}:${expiresStamp}:days-left-${daysLeft}`
 }
 
 const showSubscriptionExpiryWarning = (daysLeft: number) => {
