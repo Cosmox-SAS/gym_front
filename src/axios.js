@@ -2,6 +2,7 @@ import axios from "axios";
 import { useAuthStore } from "@/stores/useAuthStore";
 import Swal from "sweetalert2";
 import { SWAL_COLORS } from "@/lib/colors";
+import { expiredSubscriptionModalClass, expiredSubscriptionModalWidth, expiredSubscriptionPaymentHtml } from "@/lib/subscriptionPaymentModal";
 
 const apiBaseUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
 
@@ -13,6 +14,18 @@ const api = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+function isSubscriptionExpired(subscription) {
+  if (!subscription) return false;
+
+  const status = String(subscription.status ?? "").trim().toLowerCase();
+  if (status === "expired" || status === "vencida") return true;
+
+  if (!subscription.expired_at) return false;
+
+  const expiresAt = new Date(subscription.expired_at).getTime();
+  return !Number.isNaN(expiresAt) && expiresAt < Date.now();
+}
 
 // Agrega el token a cada request si existe
 api.interceptors.request.use((config) => {
@@ -84,14 +97,30 @@ api.interceptors.response.use(
       });
     } else if (status === 402) {
       const currentPath = window.location.pathname;
+      const subscription = error.response.data?.subscription ?? null;
 
       if (currentPath !== "/subscription") {
-        Swal.fire({
-          icon: "warning",
-          title: "Suscripción requerida",
-          text: error.response.data?.message ?? "Tu suscripción está vencida o inactiva. Renueva tu plan para continuar.",
-          confirmButtonColor: SWAL_COLORS.warning,
-        }).then(() => {
+        const modalOptions = isSubscriptionExpired(subscription)
+          ? {
+              icon: "warning",
+              title: "Suscripción vencida",
+              html: expiredSubscriptionPaymentHtml(),
+              confirmButtonText: "Ir a suscripción",
+              confirmButtonColor: SWAL_COLORS.warning,
+              width: expiredSubscriptionModalWidth,
+              customClass: {
+                popup: expiredSubscriptionModalClass,
+              },
+            }
+          : {
+              icon: "warning",
+              title: "Suscripción requerida",
+              text: error.response.data?.message ?? "Tu suscripción está vencida o inactiva. Renueva tu plan para continuar.",
+              confirmButtonText: "Ir a suscripción",
+              confirmButtonColor: SWAL_COLORS.warning,
+            };
+
+        Swal.fire(modalOptions).then(() => {
           window.location.href = "/subscription";
         });
       }

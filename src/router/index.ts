@@ -1,6 +1,47 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useSubscriptionStore } from "@/stores/useSubscriptionStore";
 import Swal from "sweetalert2";
+import { expiredSubscriptionModalClass, expiredSubscriptionModalWidth, expiredSubscriptionPaymentHtml } from "@/lib/subscriptionPaymentModal";
+
+function isSubscriptionExpired(subscription: Record<string, any> | null) {
+  if (!subscription) return false;
+
+  const status = String(subscription.status ?? "").trim().toLowerCase();
+  if (status === "expired" || status === "vencida") return true;
+
+  if (!subscription.expired_at) return false;
+
+  const expiresAt = new Date(subscription.expired_at).getTime();
+  return !Number.isNaN(expiresAt) && expiresAt < Date.now();
+}
+
+function subscriptionRequiredModalOptions(subscription: Record<string, any> | null) {
+  if (isSubscriptionExpired(subscription)) {
+    return {
+      icon: "warning" as const,
+      title: "Suscripción vencida",
+      html: expiredSubscriptionPaymentHtml(),
+      confirmButtonText: "Ir a suscripción",
+      showCancelButton: true,
+      cancelButtonText: "Más tarde",
+      heightAuto: false,
+      width: expiredSubscriptionModalWidth,
+      customClass: {
+        popup: expiredSubscriptionModalClass,
+      },
+    };
+  }
+
+  return {
+    icon: "warning" as const,
+    title: "Suscripción requerida",
+    text: "Activá tu suscripción para acceder a este módulo.",
+    confirmButtonText: "Ir a suscripción",
+    showCancelButton: true,
+    cancelButtonText: "Cancelar",
+    heightAuto: false,
+  };
+}
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -173,15 +214,7 @@ router.beforeEach(async (to, from, next) => {
       !isSubscriptionRoute &&
       !isMenuRoute
     ) {
-      const result = await Swal.fire({
-        icon: "warning",
-        title: "Suscripción requerida",
-        text: "Activá tu suscripción para acceder a este módulo.",
-        confirmButtonText: "Ir a suscripción",
-        showCancelButton: true,
-        cancelButtonText: "Cancelar",
-        heightAuto: false,
-      });
+      const result = await Swal.fire(subscriptionRequiredModalOptions(subscriptionStore.subscription));
 
       if (result.isConfirmed) {
         next({ name: "Subscription" });

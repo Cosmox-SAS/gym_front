@@ -134,6 +134,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useSubscriptionStore } from '@/stores/useSubscriptionStore'
 import { useTheme } from '@/composables/useTheme'
+import { expiredSubscriptionModalClass, expiredSubscriptionModalWidth, expiredSubscriptionPaymentHtml } from '@/lib/subscriptionPaymentModal'
 import Swal from 'sweetalert2'
 import {
   LayoutDashboard,
@@ -215,6 +216,18 @@ const getSubscriptionWarningKey = (subscription: Record<string, any>, daysLeft: 
   return `subscription-expiry-warning:${subscriptionId}:${expiresStamp}:days-left-${daysLeft}`
 }
 
+const isSubscriptionExpired = (subscription: Record<string, any> | null) => {
+  if (!subscription) return false
+
+  const status = String(subscription.status ?? '').trim().toLowerCase()
+  if (status === 'expired' || status === 'vencida') return true
+
+  if (!subscription.expired_at) return false
+
+  const expiresAt = new Date(subscription.expired_at).getTime()
+  return !Number.isNaN(expiresAt) && expiresAt < Date.now()
+}
+
 const showSubscriptionExpiryWarning = (daysLeft: number) => {
   Swal.fire({
     icon: 'warning',
@@ -257,7 +270,10 @@ const refreshSubscriptionAndWarn = async () => {
     !isSubscriptionRoute(route.path) &&
     !isMenuRoute(route.path)
   ) {
-    const wentToSubscription = await showSubscriptionLock()
+    const subscription = subscriptionStore.subscription
+    const wentToSubscription = isSubscriptionExpired(subscription)
+      ? await showSubscriptionPaymentRequired()
+      : await showSubscriptionLock()
     if (!wentToSubscription) {
       await router.replace('/menu')
     }
@@ -348,6 +364,33 @@ const showSubscriptionLock = async () => {
   return false
 }
 
+const showSubscriptionPaymentRequired = async () => {
+  if (subscriptionLockModalOpen.value) return false
+
+  subscriptionLockModalOpen.value = true
+  const result = await Swal.fire({
+    icon: 'warning',
+    title: 'Suscripción vencida',
+    html: expiredSubscriptionPaymentHtml(),
+    confirmButtonText: 'Ir a suscripción',
+    showCancelButton: true,
+    cancelButtonText: 'Más tarde',
+    heightAuto: false,
+    width: expiredSubscriptionModalWidth,
+    customClass: {
+      popup: expiredSubscriptionModalClass,
+    },
+  })
+  subscriptionLockModalOpen.value = false
+
+  if (result.isConfirmed) {
+    await router.push('/subscription')
+    return true
+  }
+
+  return false
+}
+
 const handleNavClick = async (event: MouseEvent, to: string) => {
   if (!requiresSubscription(to)) {
     sidebarOpen.value = false
@@ -361,6 +404,12 @@ const handleNavClick = async (event: MouseEvent, to: string) => {
   await subscriptionStore.loadSubscription()
 
   if (!subscriptionStore.hasActiveSubscription) {
+    const subscription = subscriptionStore.subscription
+    if (isSubscriptionExpired(subscription)) {
+      await showSubscriptionPaymentRequired()
+      return
+    }
+
     await showSubscriptionLock()
     return
   }

@@ -110,8 +110,18 @@
 
         <!-- Planes disponibles -->
         <div v-if="plansVisible">
-          <div v-if="isPlanActivationBlocked" class="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            Tu suscripción está vencida. No puedes activar ningún plan.
+          <div v-if="isSubscriptionExpired" class="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <p class="font-bold mb-2">Tu suscripción está vencida. Debes realizar el pago para reactivar el acceso.</p>
+            <p class="mb-3">Escanea este QR y comunícate con soporte para validar el pago.</p>
+            <img
+              :src="paymentQr"
+              alt="QR de pago"
+              class="mx-auto w-full max-w-[220px] rounded-xl border border-red-100 shadow-lg"
+            />
+          </div>
+
+          <div v-else-if="isPlanActivationBlocked" class="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            Tu suscripción no está activa. No puedes activar ningún plan.
           </div>
 
           <h3 class="text-lg font-bold text-default mb-4">
@@ -181,6 +191,8 @@ import { useSubscriptionStore } from '@/stores/useSubscriptionStore'
 import Swal from 'sweetalert2'
 import dayjs from 'dayjs'
 import { SWAL_COLORS } from '@/lib/colors'
+import { expiredSubscriptionModalClass, expiredSubscriptionModalWidth, expiredSubscriptionPaymentHtml } from '@/lib/subscriptionPaymentModal'
+import paymentQr from '@/assets/images/QR_pagos.jpeg'
 import {
   Home,
   Loader2,
@@ -198,6 +210,7 @@ import {
 const loading  = ref(true)
 const saving   = ref(false)
 const showPlans = ref(false)
+const paymentModalOpen = ref(false)
 
 const subscription = ref<any>(null)
 const plans        = ref<any[]>([])
@@ -265,6 +278,14 @@ const isSubscriptionInactive = computed(() => {
     || ['expired', 'canceled', 'cancelled', 'inactive', 'vencida'].includes(status)
 })
 
+const isSubscriptionExpired = computed(() => {
+  if (!subscription.value) return false
+  const status = String(subscription.value.status ?? '').trim().toLowerCase()
+  if (status === 'expired' || status === 'vencida') return true
+  if (!subscription.value.expired_at) return false
+  return dayjs(subscription.value.expired_at).isBefore(dayjs())
+})
+
 const plansVisible = computed(() => !subscription.value || showPlans.value || isSubscriptionInactive.value)
 
 const isPlanActivationBlocked = computed(() => Boolean(subscription.value && isSubscriptionInactive.value))
@@ -281,6 +302,24 @@ function isCurrentPlan(plan: any) {
 function handlePlanCardClick(plan: any) {
   if (isCurrentPlan(plan) || saving.value || isPlanActivationBlocked.value) return
   selectPlan(plan)
+}
+
+async function showExpiredSubscriptionPaymentModal() {
+  if (!isSubscriptionExpired.value || paymentModalOpen.value) return
+
+  paymentModalOpen.value = true
+  await Swal.fire({
+    icon: 'warning',
+    title: 'Suscripción vencida',
+    html: expiredSubscriptionPaymentHtml(),
+    confirmButtonText: 'Entendido',
+    heightAuto: false,
+    width: expiredSubscriptionModalWidth,
+    customClass: {
+      popup: expiredSubscriptionModalClass,
+    },
+  })
+  paymentModalOpen.value = false
 }
 
 async function load() {
@@ -341,6 +380,7 @@ async function confirmCancel() {
 onMounted(async () => {
   try {
     await load()
+    await showExpiredSubscriptionPaymentModal()
   } finally {
     loading.value = false
   }

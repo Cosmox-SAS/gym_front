@@ -115,6 +115,7 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { useSubscriptionStore } from '@/stores/useSubscriptionStore'
 import api from '@/axios'
 import Swal from 'sweetalert2'
+import { expiredSubscriptionModalClass, expiredSubscriptionModalWidth, expiredSubscriptionPaymentHtml } from '@/lib/subscriptionPaymentModal'
 import { formatAppDate } from '@/lib/dates'
 import {
   UserCheck,
@@ -176,6 +177,18 @@ const requiresSubscription = (to: string) =>
 const isQuickItemLocked = (to: string) =>
   moduleLocked.value && requiresSubscription(to)
 
+function isSubscriptionExpired(subscription: Record<string, any> | null) {
+  if (!subscription) return false
+
+  const status = String(subscription.status ?? '').trim().toLowerCase()
+  if (status === 'expired' || status === 'vencida') return true
+
+  if (!subscription.expired_at) return false
+
+  const expiresAt = new Date(subscription.expired_at).getTime()
+  return !Number.isNaN(expiresAt) && expiresAt < Date.now()
+}
+
 async function showSubscriptionLock() {
   if (subscriptionLockModalOpen.value) return false
 
@@ -199,6 +212,33 @@ async function showSubscriptionLock() {
   return false
 }
 
+async function showSubscriptionPaymentRequired() {
+  if (subscriptionLockModalOpen.value) return false
+
+  subscriptionLockModalOpen.value = true
+  const result = await Swal.fire({
+    icon: 'warning',
+    title: 'Suscripción vencida',
+    html: expiredSubscriptionPaymentHtml(),
+    confirmButtonText: 'Ir a suscripción',
+    showCancelButton: true,
+    cancelButtonText: 'Más tarde',
+    heightAuto: false,
+    width: expiredSubscriptionModalWidth,
+    customClass: {
+      popup: expiredSubscriptionModalClass,
+    },
+  })
+  subscriptionLockModalOpen.value = false
+
+  if (result.isConfirmed) {
+    await router.push('/subscription')
+    return true
+  }
+
+  return false
+}
+
 async function handleProtectedClick(event: MouseEvent, to: string) {
   if (!requiresSubscription(to)) return
 
@@ -208,6 +248,12 @@ async function handleProtectedClick(event: MouseEvent, to: string) {
   await subscriptionStore.loadSubscription()
 
   if (!subscriptionStore.hasActiveSubscription) {
+    const subscription = subscriptionStore.subscription
+    if (isSubscriptionExpired(subscription)) {
+      await showSubscriptionPaymentRequired()
+      return
+    }
+
     await showSubscriptionLock()
     return
   }
@@ -218,6 +264,12 @@ async function handleProtectedClick(event: MouseEvent, to: string) {
 onMounted(async () => {
   await subscriptionStore.loadSubscription()
   if (!subscriptionStore.hasActiveSubscription) {
+    const subscription = subscriptionStore.subscription
+    if (isSubscriptionExpired(subscription)) {
+      await showSubscriptionPaymentRequired()
+      return
+    }
+
     await showSubscriptionLock()
     return
   }
