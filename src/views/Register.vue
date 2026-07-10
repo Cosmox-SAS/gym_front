@@ -108,7 +108,9 @@ const register = async () => {
   loading.value = true
   try {
     const response = await api.post('/register', form)
-    auth.setToken(response.data.access_token)
+    const { access_token, user } = response.data
+    auth.setToken(access_token)
+    auth.setUser(user)
     await Swal.fire({
       title: '¡Registro exitoso!',
       text: 'Tu cuenta ha sido creada correctamente.',
@@ -116,7 +118,7 @@ const register = async () => {
       confirmButtonText: 'Continuar',
       confirmButtonColor: '#dc2626',
     })
-    router.push({ name: 'Login' })
+    router.push('/Menu')
   } catch (error: any) {
     Swal.fire({
       title: 'Error en el registro',
