@@ -87,12 +87,14 @@ import { ref, reactive } from 'vue'
 
 import { useRouter } from 'vue-router'
 import api from '@/axios'
+import { useTheme } from '@/composables/useTheme'
 import { useAuthStore } from '@/stores/useAuthStore'
 import Swal from 'sweetalert2'
 import { User, Mail, Lock, Dumbbell, Eye, EyeOff, Loader2, UserPlus } from 'lucide-vue-next'
 
 const router = useRouter()
 const auth = useAuthStore()
+const { setTheme } = useTheme()
 const loading = ref(false)
 const showPassword = ref(false)
 
@@ -111,6 +113,7 @@ const register = async () => {
     const { access_token, user } = response.data
     auth.setToken(access_token)
     auth.setUser(user)
+    setTheme('light')
     await Swal.fire({
       title: '¡Registro exitoso!',
       text: 'Tu cuenta ha sido creada correctamente.',
