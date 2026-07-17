@@ -477,14 +477,16 @@ const abrirPagar = (member) => {
 };
 
 const miembrosFiltrados = computed(() => {
-  const term = busqueda.value.toLowerCase();
+  const term = busqueda.value.trim().toLowerCase();
   return members.value.filter((m) => {
+    const memberStatus = m.memberships?.[0]?.status;
     const matchesSearch =
       m.name.toLowerCase().includes(term) || (m.phone || "").includes(term);
     if (!matchesSearch) return false;
 
+    if (!term && memberStatus === "cancelled") return false;
+
     if (statusFilter.value !== "") {
-      const memberStatus = m.memberships?.[0]?.status;
       if (statusFilter.value === "expired" && memberStatus !== "expired") return false;
       if (statusFilter.value === "inactive_unpaid" && memberStatus !== "inactive_unpaid") return false;
       if (statusFilter.value === "expiring_soon") {
