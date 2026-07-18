@@ -91,6 +91,18 @@
                 />
               </div>
 
+              <label class="md:col-span-2 flex items-start gap-3 p-3 rounded-xl border border-default-soft bg-[var(--color-overlay)]">
+                <input
+                  v-model="form.allow_whatsapp_notifications"
+                  type="checkbox"
+                  class="mt-1 h-4 w-4 accent-emerald-500"
+                />
+                <span>
+                  <span class="block text-sm font-semibold text-default">Recibir recordatorios por WhatsApp</span>
+                  <span class="block text-xs text-subtle">Se enviarán avisos de vencimiento de membresía a este número.</span>
+                </span>
+              </label>
+
               <div class="dark-field">
                 <label class="dark-label">Fecha de Nacimiento</label>
                 <input
@@ -331,6 +343,7 @@ const form = ref({
   identification: "",
   email: "",
   phone: "",
+  allow_whatsapp_notifications: false,
   birth_date: "",
   sexo: "",
   peso: null,

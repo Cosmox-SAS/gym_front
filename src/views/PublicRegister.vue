@@ -68,6 +68,18 @@
               </div>
             </div>
 
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-default-soft bg-[var(--color-surface-soft)]">
+              <input
+                v-model="form.allow_whatsapp_notifications"
+                type="checkbox"
+                class="mt-1 h-4 w-4 accent-emerald-600"
+              />
+              <span>
+                <span class="block text-sm font-semibold text-default">Recibir recordatorios por WhatsApp</span>
+                <span class="block text-xs text-muted">Acepto recibir avisos de vencimiento de mi membresía en este número.</span>
+              </span>
+            </label>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label class="block text-muted text-sm mb-1 flex items-center gap-1">
@@ -232,6 +244,7 @@ const form = reactive({
   identification: '',
   email: '',
   phone: '',
+  allow_whatsapp_notifications: false,
   birth_date: '',
   sexo: '',
   peso: null as number | null, // Especificar tipo

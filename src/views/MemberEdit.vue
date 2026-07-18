@@ -65,6 +65,17 @@
                 placeholder="+57 300 123 4567"
                 :error="errors.phone"
               />
+              <label class="sm:col-span-2 lg:col-span-3 flex items-start gap-3 p-3 rounded-xl border border-default-soft bg-[var(--color-surface)]">
+                <input
+                  v-model="form.allow_whatsapp_notifications"
+                  type="checkbox"
+                  class="mt-1 h-4 w-4 accent-emerald-600"
+                />
+                <span>
+                  <span class="block text-sm font-semibold text-default">Recibir recordatorios por WhatsApp</span>
+                  <span class="block text-xs text-muted">Se enviarán avisos de vencimiento de membresía a este número.</span>
+                </span>
+              </label>
               <BaseInput
                 v-model="form.birth_date"
                 label="Fecha de Nacimiento"
@@ -233,6 +244,7 @@ const form = reactive({
   name: "",
   birth_date: "",
   phone: "",
+  allow_whatsapp_notifications: false,
   email: "",
   peso: null,
   estatura: null,
@@ -254,6 +266,7 @@ const fetchMember = async () => {
       name: data.name ?? "",
       birth_date: data.birth_date ?? "",
       phone: data.phone ?? "",
+      allow_whatsapp_notifications: !!data.allow_whatsapp_notifications,
       email: data.email ?? "",
       peso: data.peso ?? null,
       estatura: data.estatura ?? null,
