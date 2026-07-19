@@ -49,6 +49,20 @@
         >
           Vencen Pronto
         </button>
+        <button
+          @click="statusFilter = 'cancelled'"
+          class="btn btn-sm whitespace-nowrap"
+          :class="statusFilter === 'cancelled' ? 'btn-primary' : 'btn-secondary'"
+        >
+          Canceladas
+        </button>
+        <button
+          @click="statusFilter = 'inactive'"
+          class="btn btn-sm whitespace-nowrap"
+          :class="statusFilter === 'inactive' ? 'btn-primary' : 'btn-secondary'"
+        >
+          Inactivas
+        </button>
 
         <div :class="['freq-select-wrap', selectedFrequency !== '' ? 'freq-select--active' : '']">
           <BaseSelect
@@ -489,6 +503,8 @@ const miembrosFiltrados = computed(() => {
     if (statusFilter.value !== "") {
       if (statusFilter.value === "expired" && memberStatus !== "expired") return false;
       if (statusFilter.value === "inactive_unpaid" && memberStatus !== "inactive_unpaid") return false;
+      if (statusFilter.value === "cancelled" && memberStatus !== "cancelled") return false;
+      if (statusFilter.value === "inactive" && memberStatus !== "inactive") return false;
       if (statusFilter.value === "expiring_soon") {
         if (memberStatus !== "active") return false;
         const days = membershipDays(m);
