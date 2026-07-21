@@ -5,7 +5,7 @@ import AppLayout from '@/components/AppLayout.vue'
 
 const route = useRoute()
 
-const noLayoutRoutes = ['Login', 'register', 'PublicRegister', 'FingerprintKiosk']
+const noLayoutRoutes = ['Login', 'register', 'PublicRegister', 'FingerprintKiosk', 'IdentificationKiosk']
 const showLayout = computed(() =>
   !!route.name && !noLayoutRoutes.includes(route.name as string)
 )

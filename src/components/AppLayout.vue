@@ -144,7 +144,6 @@ import {
   Package,
   BarChart3,
   DoorOpen,
-  Store,
   CalendarCheck2,
   Sun,
   Moon,
@@ -209,7 +208,7 @@ const navItems = [
   { to: '/CashBox',         label: 'Caja',           color: '#2dd4bf', icon: BadgeDollarSign },
   { to: '/statistics',      label: 'Estadísticas',   color: '#fb923c', icon: BarChart3 },
   { to: '/access-logs',     label: 'Ingresos',       color: '#818cf8', icon: DoorOpen },
-  { to: '/kiosko',          label: 'Kiosco',         color: '#4ade80', icon: Store },
+  { to: '/kiosko-cedula',   label: 'Kiosco',         color: '#22d3ee', icon: DoorOpen },
   { to: '/subscription',    label: 'Suscripción',    color: '#34d399', icon: Package },
 ]
 
