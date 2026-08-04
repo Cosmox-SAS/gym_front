@@ -234,6 +234,15 @@
               </router-link>
 
               <button
+                v-if="member.memberships?.[0]?.status === 'inactive_unpaid'"
+                class="action-btn action-indigo"
+                @click="abrirCambiarPlan(member)"
+              >
+                <Repeat class="w-3.5 h-3.5" aria-hidden="true" />
+                Cambiar Plan
+              </button>
+              <button
+                v-else
                 class="action-btn"
                 :class="member.memberships?.[0]?.status === 'expired' ? 'action-warning' : 'action-indigo'"
                 @click="abrirAsignar(member)"
@@ -282,6 +291,8 @@
       :show="showAssignModal"
       :member="selectedMember"
       :planes="planes"
+      :mode="assignModalMode"
+      :membership-id="selectedMembershipId"
       @close="showAssignModal = false"
       @assigned="handleMemberAssigned"
     />
@@ -318,6 +329,7 @@ import {
   MessageCircle,
   CalendarCheck2,
   RefreshCw,
+  Repeat,
   DollarSign,
   ChevronLeft,
   ChevronRight,
@@ -354,6 +366,8 @@ const selectedMember = ref(null);
 // Estado de Modales
 const showRegisterModal = ref(false);
 const showAssignModal = ref(false);
+const assignModalMode = ref("create"); // 'create' | 'change'
+const selectedMembershipId = ref(null);
 const showPaymentModal = ref(false);
 const showDetailModal = ref(false);
 const selectedDetailId = ref(null);
@@ -427,7 +441,7 @@ const handleMemberAssigned = async (member) => {
   showAssignModal.value = false;
   await cargarMiembros(); // Recargar para actualizar el estado del cliente
   Swal.fire({
-    title: "Membresía Asignada",
+    title: assignModalMode.value === "change" ? "Plan Actualizado" : "Membresía Asignada",
     text: "¿Deseas registrar el pago ahora?",
     icon: "success",
     showCancelButton: true,
@@ -458,6 +472,15 @@ const isDetalleAbierto = (id) => detallesAbiertos.value.includes(detalleKey(id))
 
 const abrirAsignar = (member) => {
   selectedMember.value = member;
+  assignModalMode.value = "create";
+  selectedMembershipId.value = null;
+  showAssignModal.value = true;
+};
+
+const abrirCambiarPlan = (member) => {
+  selectedMember.value = member;
+  assignModalMode.value = "change";
+  selectedMembershipId.value = member.memberships?.[0]?.id ?? null;
   showAssignModal.value = true;
 };
 
