@@ -430,7 +430,7 @@ const cambiarPagina = (page) => {
 };
 
 const cargarMiembros = async () => {
-  const { data } = await api.get("/members");
+  const { data } = await api.get("/members", { params: { simple: 1 } });
   miembros.value = data;
 };
 const cargarPlanes = async () => {

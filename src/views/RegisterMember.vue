@@ -89,6 +89,7 @@
                   class="dark-input"
                   placeholder="+57 300 123 4567"
                 />
+                <p v-if="errors.phone || whatsAppError" class="dark-error">{{ errors.phone || whatsAppError }}</p>
               </div>
 
               <label class="md:col-span-2 flex items-start gap-3 p-3 rounded-xl border border-default-soft bg-[var(--color-overlay)]">
@@ -99,7 +100,7 @@
                 />
                 <span>
                   <span class="block text-sm font-semibold text-default">Recibir recordatorios por WhatsApp</span>
-                  <span class="block text-xs text-subtle">Se enviarán avisos de vencimiento de membresía a este número.</span>
+                  <span class="block text-xs text-subtle">El cliente autorizó recibir avisos de vencimiento de su membresía en este celular.</span>
                 </span>
               </label>
 
@@ -320,7 +321,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/axios";
 import { X, UserPlus, Save, Loader2 } from 'lucide-vue-next'
@@ -330,6 +331,7 @@ import FingerprintEnroll from "@/components/FingerprintEnroll.vue";
 import ProgressPhotoCapture from "@/components/members/ProgressPhotoCapture.vue";
 import { SWAL_COLORS } from "@/lib/colors";
 import { uploadPendingMemberPhotos } from "@/lib/memberPhotos";
+import { whatsAppPhoneError } from "@/lib/whatsapp";
 
 const router = useRouter();
 
@@ -352,6 +354,7 @@ const form = ref({
 });
 
 const errors = ref({});
+const whatsAppError = computed(() => whatsAppPhoneError(form.value.allow_whatsapp_notifications, form.value.phone));
 const planes = ref([]);
 const selectedPlanId = ref(null);
 const saving = ref(false);
@@ -413,6 +416,12 @@ function resetErrors() {
 const registerMember = async () => {
   if (saving.value) return;
   resetErrors();
+
+  if (whatsAppError.value) {
+    errorMessage.value = "Verifica los datos resaltados e intenta nuevamente.";
+    return;
+  }
+
   saving.value = true;
 
   try {

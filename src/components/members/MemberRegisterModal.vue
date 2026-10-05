@@ -66,6 +66,7 @@
                   label="Teléfono"
                   type="tel"
                   placeholder="+57 300 123 4567"
+                  :error="whatsAppError"
                 />
                 <label class="sm:col-span-2 lg:col-span-3 flex items-start gap-3 p-3 rounded-xl border border-default-soft bg-[var(--color-surface)]">
                   <input
@@ -75,7 +76,7 @@
                   />
                   <span>
                     <span class="block text-sm font-semibold text-default">Recibir recordatorios por WhatsApp</span>
-                    <span class="block text-xs text-muted">Se enviarán avisos de vencimiento de membresía a este número.</span>
+                    <span class="block text-xs text-muted">El cliente autorizó recibir avisos de vencimiento de su membresía en este celular.</span>
                   </span>
                 </label>
                 <BaseInput
@@ -236,6 +237,7 @@ import ProgressPhotoCapture from "@/components/members/ProgressPhotoCapture.vue"
 import { BaseInput, BaseSelect, BaseButton } from "@/components/ui";
 import { SWAL_COLORS } from "@/lib/colors";
 import { uploadPendingMemberPhotos } from "@/lib/memberPhotos";
+import { whatsAppPhoneError } from "@/lib/whatsapp";
 
 const props = defineProps({
   show: Boolean,
@@ -254,6 +256,8 @@ const sexoOptions = [
   { value: "no binario", label: "No binario" },
   { value: "otro", label: "Otro" },
 ];
+
+const whatsAppError = computed(() => whatsAppPhoneError(form.allow_whatsapp_notifications, form.phone));
 
 const planOptions = computed(() => [
   { value: "", label: "— Solo registrar cliente —" },
@@ -293,6 +297,16 @@ function resetForm() {
 }
 
 const registrar = async () => {
+  if (whatsAppError.value) {
+    Swal.fire({
+      icon: "warning",
+      title: "Revisa el teléfono",
+      text: whatsAppError.value,
+      confirmButtonColor: SWAL_COLORS.danger,
+    });
+    return;
+  }
+
   loading.value = true;
   try {
     const payload = { ...form };
@@ -319,7 +333,7 @@ const registrar = async () => {
       Swal.fire({
         icon: "error",
         title: "Error de validación",
-        text: "Verifica si la identificación o email ya existen.",
+        text: e.response.data?.errors?.phone?.[0] || "Verifica si la identificación o email ya existen.",
         confirmButtonColor: SWAL_COLORS.danger,
       });
     } else {

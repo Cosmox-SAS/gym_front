@@ -57,6 +57,24 @@
             placeholder="Frecuencia"
           />
         </div>
+
+        <div :class="['freq-select-wrap', whatsAppFilter !== '' ? 'freq-select--active' : '']">
+          <BaseSelect
+            v-model="whatsAppFilter"
+            :options="whatsAppOpciones"
+            placeholder="WhatsApp"
+          />
+        </div>
+
+        <button
+          v-if="pendientesWhatsApp.length"
+          @click="activarWhatsAppMasivo"
+          :disabled="activandoWhatsApp"
+          class="btn btn-sm btn-success whitespace-nowrap inline-flex items-center gap-1.5 sm:ml-auto"
+        >
+          <MessageCircle class="w-3.5 h-3.5" aria-hidden="true" />
+          Activar WhatsApp ({{ pendientesWhatsApp.length }})
+        </button>
       </div>
 
       <div class="mb-6 relative">
@@ -117,6 +135,15 @@
                 <h2 class="text-base font-bold text-default whitespace-normal break-words leading-snug">{{ member.name }}</h2>
                 <p class="text-sm text-muted mt-0.5 truncate">{{ member.email || "Sin correo electrónico" }}</p>
                 <p class="text-xs text-subtle mt-0.5">{{ member.identification ? `C.C ${member.identification}` : "C.C —" }}</p>
+                <span
+                  v-if="member.allow_whatsapp_notifications"
+                  class="wa-chip mt-1"
+                  :class="isValidWhatsAppPhone(member.phone) ? 'wa-chip-ok' : 'wa-chip-warn'"
+                  :title="isValidWhatsAppPhone(member.phone) ? 'Recibe recordatorios de vencimiento por WhatsApp' : 'El teléfono no es un celular válido: no se enviarán recordatorios'"
+                >
+                  <component :is="isValidWhatsAppPhone(member.phone) ? BellRing : AlertTriangle" class="w-3 h-3" aria-hidden="true" />
+                  {{ isValidWhatsAppPhone(member.phone) ? "Recordatorios WhatsApp" : "WhatsApp: celular inválido" }}
+                </span>
               </div>
             </div>
             <div class="flex flex-col items-end justify-center gap-2 shrink-0 h-20">
@@ -320,6 +347,8 @@ import dayjs from "dayjs";
 import Sidebar from "@/views/Sidebar.vue";
 import Swal from "sweetalert2";
 import { formatAppDate } from "@/lib/dates";
+import { SWAL_COLORS } from "@/lib/colors";
+import { isValidWhatsAppPhone } from "@/lib/whatsapp";
 import {
   Home,
   UserPlus,
@@ -335,6 +364,8 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
+  BellRing,
+  AlertTriangle,
 } from "lucide-vue-next";
 
 import { BaseSelect } from "@/components/ui";
@@ -352,6 +383,14 @@ const loading = ref(true);
 const busqueda = ref("");
 const statusFilter = ref("");
 const selectedFrequency = ref("");
+const whatsAppFilter = ref("");
+const activandoWhatsApp = ref(false);
+
+const whatsAppOpciones = [
+  { value: "", label: "WhatsApp" },
+  { value: "on", label: "Con recordatorios" },
+  { value: "off", label: "Sin recordatorios" },
+];
 const detallesAbiertos = ref([]);
 
 const frecuenciaOpciones = computed(() => [
@@ -524,9 +563,61 @@ const miembrosFiltrados = computed(() => {
       if (freq !== selectedFrequency.value) return false;
     }
 
+    if (whatsAppFilter.value === "on" && !m.allow_whatsapp_notifications) return false;
+    if (whatsAppFilter.value === "off" && m.allow_whatsapp_notifications) return false;
+
     return true;
   });
 });
+
+// Clientes del filtro actual que podrían activarse: sin recordatorios y con celular válido.
+const pendientesWhatsApp = computed(() =>
+  miembrosFiltrados.value.filter((m) => !m.allow_whatsapp_notifications && isValidWhatsAppPhone(m.phone))
+);
+
+const activarWhatsAppMasivo = async () => {
+  const pendientes = pendientesWhatsApp.value;
+  const sinCelular = miembrosFiltrados.value.filter(
+    (m) => !m.allow_whatsapp_notifications && !isValidWhatsAppPhone(m.phone)
+  ).length;
+
+  const { isConfirmed } = await Swal.fire({
+    title: "Activar recordatorios por WhatsApp",
+    html: `
+      <p>Se activarán los recordatorios de vencimiento para <b>${pendientes.length}</b> cliente(s) del listado actual.</p>
+      ${sinCelular ? `<p style="margin-top:.5rem;font-size:.85em;opacity:.8">${sinCelular} cliente(s) sin celular válido no se incluyen.</p>` : ""}
+    `,
+    input: "checkbox",
+    inputValue: 0,
+    inputPlaceholder: "Confirmo que estos clientes autorizaron recibir mensajes por WhatsApp",
+    inputValidator: (checked) => (!checked ? "Debes confirmar la autorización de los clientes" : undefined),
+    showCancelButton: true,
+    confirmButtonText: "Activar",
+    cancelButtonText: "Cancelar",
+    confirmButtonColor: SWAL_COLORS.success,
+  });
+  if (!isConfirmed) return;
+
+  activandoWhatsApp.value = true;
+  try {
+    const { data } = await api.post("/members/whatsapp-notifications", {
+      member_ids: pendientes.map((m) => m.id),
+      enabled: true,
+    });
+    await cargarMiembros();
+    Swal.fire({
+      icon: "success",
+      title: "Recordatorios activados",
+      text: `${data.updated} cliente(s) recibirán avisos de vencimiento por WhatsApp.`,
+      confirmButtonColor: SWAL_COLORS.success,
+    });
+  } catch (e) {
+    console.error(e);
+    Swal.fire("Error", "No se pudieron activar los recordatorios.", "error");
+  } finally {
+    activandoWhatsApp.value = false;
+  }
+};
 const currentPageMiembros = ref(1);
 const PER_PAGE = 10;
 const totalMiembrosPages = computed(() => Math.ceil(miembrosFiltrados.value.length / PER_PAGE));
@@ -537,6 +628,7 @@ const miembrosPaginados = computed(() => {
 watch(busqueda, () => { currentPageMiembros.value = 1; });
 watch(statusFilter, () => { currentPageMiembros.value = 1; });
 watch(selectedFrequency, () => { currentPageMiembros.value = 1; });
+watch(whatsAppFilter, () => { currentPageMiembros.value = 1; });
 
 function formatearTelefono(numero) {
   if (!numero) return "";
@@ -968,6 +1060,20 @@ function membershipDaysClass(member) {
   background: rgba(249,115,22,0.25);
   border-color: rgba(249,115,22,0.5);
 }
+
+.wa-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+.wa-chip-ok { background: rgba(22, 163, 74, 0.12); color: #15803d; }
+.wa-chip-warn { background: rgba(245, 158, 11, 0.16); color: #b45309; }
+:global(.dark) .wa-chip-ok { background: rgba(34, 197, 94, 0.15); color: #86efac; }
+:global(.dark) .wa-chip-warn { background: rgba(245, 158, 11, 0.18); color: #fcd34d; }
 
 .detail-toggle-active {
   background: rgba(59, 130, 246, 0.12);

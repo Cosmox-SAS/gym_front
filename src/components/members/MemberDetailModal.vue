@@ -229,6 +229,14 @@
               <div class="space-y-5">
                 <div class="detail-card">
                   <div class="section-header">
+                    <span class="section-bar bg-emerald-500" />
+                    <h2 class="section-title" style="color: var(--color-text-muted);">WhatsApp</h2>
+                  </div>
+                  <MemberWhatsAppStatus :member="member" />
+                </div>
+
+                <div class="detail-card">
+                  <div class="section-header">
                     <span class="section-bar bg-amber-500" />
                     <h2 class="section-title" style="color: var(--color-text-muted);">Objetivos / Observaciones</h2>
                   </div>
@@ -257,6 +265,7 @@ import api from "@/axios";
 import dayjs from "dayjs";
 import Swal from "sweetalert2";
 import { BaseBadge } from "@/components/ui";
+import MemberWhatsAppStatus from "@/components/members/MemberWhatsAppStatus.vue";
 import { formatAppDate } from "@/lib/dates";
 import {
   Activity,

@@ -63,7 +63,7 @@
                 label="Teléfono"
                 type="tel"
                 placeholder="+57 300 123 4567"
-                :error="errors.phone"
+                :error="errors.phone || whatsAppError"
               />
               <label class="sm:col-span-2 lg:col-span-3 flex items-start gap-3 p-3 rounded-xl border border-default-soft bg-[var(--color-surface)]">
                 <input
@@ -73,7 +73,7 @@
                 />
                 <span>
                   <span class="block text-sm font-semibold text-default">Recibir recordatorios por WhatsApp</span>
-                  <span class="block text-xs text-muted">Se enviarán avisos de vencimiento de membresía a este número.</span>
+                  <span class="block text-xs text-muted">El cliente autorizó recibir avisos de vencimiento de su membresía en este celular.</span>
                 </span>
               </label>
               <BaseInput
@@ -216,7 +216,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from "vue";
+import { reactive, ref, computed, onMounted } from "vue";
 
 import { useRoute, useRouter } from "vue-router";
 import { User, X, Save } from 'lucide-vue-next'
@@ -227,6 +227,7 @@ import ProgressPhotoCapture from "@/components/members/ProgressPhotoCapture.vue"
 import { BaseInput, BaseSelect, BaseButton } from "@/components/ui";
 import { SWAL_COLORS } from "@/lib/colors";
 import { uploadPendingMemberPhotos } from "@/lib/memberPhotos";
+import { whatsAppPhoneError } from "@/lib/whatsapp";
 
 const route = useRoute();
 const router = useRouter();
@@ -255,6 +256,7 @@ const form = reactive({
 const errors = ref({});
 const errorMessage = ref("");
 const loading = ref(false);
+const whatsAppError = computed(() => whatsAppPhoneError(form.allow_whatsapp_notifications, form.phone));
 const memberHasFingerprint = ref(false);
 const initialPhotos = ref([null, null, null]);
 
@@ -287,9 +289,15 @@ const fetchMember = async () => {
 };
 
 const updateMember = async () => {
-  loading.value = true;
   errorMessage.value = "";
   errors.value = {};
+
+  if (whatsAppError.value) {
+    errorMessage.value = "Verifica los datos resaltados e intenta nuevamente.";
+    return;
+  }
+
+  loading.value = true;
 
   try {
     const uploadedPhotos = await uploadPendingMemberPhotos(memberId, initialPhotos.value);

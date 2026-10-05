@@ -292,7 +292,7 @@ const cargarHistorial = async () => {
 
 const cargarMiembros = async () => {
   try {
-    const { data } = await api.get("/members");
+    const { data } = await api.get("/members", { params: { simple: 1 } });
     miembros.value = data;
   } catch (error) {
     console.error("Error cargando miembros:", error);

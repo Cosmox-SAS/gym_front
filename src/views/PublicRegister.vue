@@ -64,7 +64,8 @@
                   <Phone class="w-3 h-3" aria-hidden="true" />
                   Teléfono
                 </label>
-                <input v-model="form.phone" type="tel" class="input-field" required/>
+                <input v-model="form.phone" type="tel" class="input-field" placeholder="300 123 4567" required/>
+                <p v-if="whatsAppError" class="text-xs text-red-600 dark:text-red-400 mt-1">{{ whatsAppError }}</p>
               </div>
             </div>
 
@@ -175,10 +176,11 @@
 </style>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import api from '@/axios' // Usamos la instancia de Axios
 import { BaseSelect } from '@/components/ui'
+import { whatsAppPhoneError } from '@/lib/whatsapp'
 import {
   User,
   IdCard,
@@ -254,6 +256,8 @@ const form = reactive({
 
 // --- FIN DE CORRECCIÓN DE TIPOS ---
 
+const whatsAppError = computed(() => whatsAppPhoneError(form.allow_whatsapp_notifications, form.phone))
+
 
 // Cargar planes al montar
 onMounted(async () => {
@@ -277,8 +281,13 @@ onMounted(async () => {
 
 // Enviar formulario
 const handleSubmit = async () => {
-  loading.value = true
   errorMessage.value = ''
+  if (whatsAppError.value) {
+    errorMessage.value = whatsAppError.value
+    return
+  }
+
+  loading.value = true
   try {
     const { data } = await api.post(`/public/register/${gimnasioId.value}`, form)
 
@@ -301,6 +310,8 @@ const handleSubmit = async () => {
         errorMessage.value = "La identificación ya está registrada."
       } else if (errors.email) {
         errorMessage.value = "El correo ya está registrado."
+      } else if (errors.phone) {
+        errorMessage.value = errors.phone[0]
       } else {
         errorMessage.value = "Por favor, revise todos los campos."
       }

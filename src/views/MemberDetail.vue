@@ -229,6 +229,14 @@
               </div>
               <p class="text-sm text-muted">Sin membresía asignada</p>
             </div>
+
+            <div class="detail-card">
+              <div class="section-header">
+                <span class="section-bar bg-emerald-500" />
+                <h2 class="section-title text-emerald-700">WhatsApp</h2>
+              </div>
+              <MemberWhatsAppStatus :member="member" />
+            </div>
           </div>
         </div>
       </template>
@@ -258,6 +266,7 @@ import {
   Weight,
 } from 'lucide-vue-next'
 import { BaseBadge } from "@/components/ui";
+import MemberWhatsAppStatus from "@/components/members/MemberWhatsAppStatus.vue";
 
 const route = useRoute();
 const member = ref(null);
