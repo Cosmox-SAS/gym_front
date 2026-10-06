@@ -49,6 +49,14 @@
         >
           Vencen Pronto
         </button>
+        <button
+          @click="statusFilter = 'birthday_month'"
+          class="btn btn-sm whitespace-nowrap inline-flex items-center gap-1"
+          :class="statusFilter === 'birthday_month' ? 'btn-primary' : 'btn-secondary'"
+        >
+          <Cake class="w-3.5 h-3.5" aria-hidden="true" />
+          Cumpleaños del mes
+        </button>
 
         <div :class="['freq-select-wrap', selectedFrequency !== '' ? 'freq-select--active' : '']">
           <BaseSelect
@@ -135,6 +143,13 @@
                 <h2 class="text-base font-bold text-default whitespace-normal break-words leading-snug">{{ member.name }}</h2>
                 <p class="text-sm text-muted mt-0.5 truncate">{{ member.email || "Sin correo electrónico" }}</p>
                 <p class="text-xs text-subtle mt-0.5">{{ member.identification ? `C.C ${member.identification}` : "C.C —" }}</p>
+                <span
+                  v-if="birthdayNoticeLabel(member.birth_date)"
+                  class="wa-chip bday-chip mt-1 mr-1"
+                  :class="{ 'bday-chip-today': isBirthdayToday(member.birth_date) }"
+                >
+                  {{ birthdayNoticeLabel(member.birth_date) }}
+                </span>
                 <span
                   v-if="member.allow_whatsapp_notifications"
                   class="wa-chip mt-1"
@@ -349,6 +364,7 @@ import Swal from "sweetalert2";
 import { formatAppDate } from "@/lib/dates";
 import { SWAL_COLORS } from "@/lib/colors";
 import { isValidWhatsAppPhone } from "@/lib/whatsapp";
+import { isBirthdayToday, isBirthdayThisMonth, birthdayNoticeLabel } from "@/lib/birthdays";
 import {
   Home,
   UserPlus,
@@ -366,6 +382,7 @@ import {
   ChevronUp,
   BellRing,
   AlertTriangle,
+  Cake,
 } from "lucide-vue-next";
 
 import { BaseSelect } from "@/components/ui";
@@ -540,7 +557,7 @@ const abrirPagar = (member) => {
 
 const miembrosFiltrados = computed(() => {
   const term = busqueda.value.trim().toLowerCase();
-  return members.value.filter((m) => {
+  const filtered = members.value.filter((m) => {
     const memberStatus = m.memberships?.[0]?.status;
     const matchesSearch =
       m.name.toLowerCase().includes(term) || (m.phone || "").includes(term);
@@ -556,6 +573,7 @@ const miembrosFiltrados = computed(() => {
         const days = membershipDays(m);
         if (days === null || days < 0 || days > 7) return false;
       }
+      if (statusFilter.value === "birthday_month" && !isBirthdayThisMonth(m.birth_date)) return false;
     }
 
     if (selectedFrequency.value) {
@@ -568,6 +586,13 @@ const miembrosFiltrados = computed(() => {
 
     return true;
   });
+
+  // En "Cumpleaños del mes" se ordenan por día del cumpleaños.
+  if (statusFilter.value === "birthday_month") {
+    const day = (m) => Number(String(m.birth_date).slice(8, 10));
+    return [...filtered].sort((a, b) => day(a) - day(b));
+  }
+  return filtered;
 });
 
 // Clientes del filtro actual que podrían activarse: sin recordatorios y con celular válido.
@@ -1070,6 +1095,10 @@ function membershipDaysClass(member) {
   font-size: 0.62rem;
   font-weight: 700;
 }
+.bday-chip { background: rgba(236, 72, 153, 0.12); color: #be185d; }
+:global(.dark) .bday-chip { background: rgba(236, 72, 153, 0.18); color: #f9a8d4; }
+.bday-chip-today { background: #db2777; color: #fff; }
+:global(.dark) .bday-chip-today { background: #db2777; color: #fff; }
 .wa-chip-ok { background: rgba(22, 163, 74, 0.12); color: #15803d; }
 .wa-chip-warn { background: rgba(245, 158, 11, 0.16); color: #b45309; }
 :global(.dark) .wa-chip-ok { background: rgba(34, 197, 94, 0.15); color: #86efac; }
