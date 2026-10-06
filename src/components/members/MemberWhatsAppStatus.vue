@@ -91,7 +91,10 @@ async function cargarHistorial(id) {
 watch(() => props.member?.id, cargarHistorial, { immediate: true });
 
 function typeLabel(type) {
-  return type === "membership_expiring_soon" ? "Aviso de vencimiento" : type;
+  return {
+    membership_expiring_soon: "Aviso 3 días antes",
+    membership_expires_today: "Aviso día del vencimiento",
+  }[type] || type;
 }
 
 function statusLabel(status) {
