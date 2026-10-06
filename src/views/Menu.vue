@@ -78,6 +78,57 @@
         </router-link>
       </div>
 
+      <!-- ═══════════ Cumpleaños ═══════════ -->
+      <template v-if="birthdaysLoaded">
+        <p class="section-label mb-4">Cumpleaños</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-12">
+          <div class="bday-card">
+            <div class="flex items-center gap-2 mb-3">
+              <Cake class="w-5 h-5 text-pink-400" aria-hidden="true" />
+              <p class="bday-title">Hoy</p>
+            </div>
+            <ul v-if="birthdaysToday.length" class="space-y-2">
+              <li v-for="b in birthdaysToday" :key="b.id" class="bday-row">
+                <div class="min-w-0">
+                  <p class="bday-name">🎂 {{ b.name }}</p>
+                  <p class="bday-meta">Cumple {{ b.turning_age }} años</p>
+                </div>
+                <a
+                  v-if="whatsAppLink(b.phone)"
+                  :href="whatsAppLink(b.phone)"
+                  target="_blank"
+                  rel="noopener"
+                  class="bday-action"
+                >
+                  <MessageCircle class="w-3.5 h-3.5" aria-hidden="true" />
+                  Felicitar
+                </a>
+              </li>
+            </ul>
+            <p v-else class="bday-empty">Nadie cumple años hoy.</p>
+          </div>
+
+          <div class="bday-card">
+            <div class="flex items-center gap-2 mb-3">
+              <CalendarHeart class="w-5 h-5 text-violet-400" aria-hidden="true" />
+              <p class="bday-title">Próximos 7 días</p>
+            </div>
+            <ul v-if="birthdaysUpcoming.length" class="space-y-2">
+              <li v-for="b in birthdaysUpcoming" :key="b.id" class="bday-row">
+                <div class="min-w-0">
+                  <p class="bday-name">{{ b.name }}</p>
+                  <p class="bday-meta">
+                    {{ formatBirthday(b.birthday) }} · cumple {{ b.turning_age }} años
+                  </p>
+                </div>
+                <span class="bday-days">{{ b.days_until === 1 ? 'Mañana' : `En ${b.days_until} días` }}</span>
+              </li>
+            </ul>
+            <p v-else class="bday-empty">No hay cumpleaños en los próximos días.</p>
+          </div>
+        </div>
+      </template>
+
       <!-- ═══════════ Acceso rápido (marquee CSS) ═══════════ -->
       <p class="section-label mb-4">Acceso Rápido</p>
       <div class="marquee">
@@ -105,6 +156,7 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import api from '@/axios'
 import Swal from 'sweetalert2'
 import { formatAppDate } from '@/lib/dates'
+import { whatsAppLink } from '@/lib/birthdays'
 import {
   UserCheck,
   AlertTriangle,
@@ -114,6 +166,9 @@ import {
   Users,
   CalendarCheck2,
   BadgeDollarSign,
+  Cake,
+  CalendarHeart,
+  MessageCircle,
 } from 'lucide-vue-next'
 const quickItemsBase = [
   { to: '/pos',        label: 'Punto de Venta', color: '#6366f1', icon: ShoppingCart },
@@ -128,6 +183,34 @@ const quickItemsRepeated = [...quickItemsBase, ...quickItemsBase]
 const auth  = useAuthStore()
 const user  = auth.user
 const stats = ref<Record<string, number>>({})
+
+type Birthday = {
+  id: number
+  name: string
+  phone: string | null
+  birthday: string
+  days_until: number
+  turning_age: number
+}
+const birthdays = ref<Birthday[]>([])
+const birthdaysLoaded = ref(false)
+const birthdaysToday = computed(() => birthdays.value.filter((b) => b.days_until === 0))
+const birthdaysUpcoming = computed(() => birthdays.value.filter((b) => b.days_until > 0))
+
+function formatBirthday(date: string) {
+  return new Intl.DateTimeFormat('es-CO', { weekday: 'short', day: 'numeric', month: 'short' })
+    .format(new Date(`${date}T00:00:00`))
+}
+
+async function cargarCumpleanos() {
+  try {
+    const { data } = await api.get<Birthday[]>('/members/birthdays', { params: { days: 7 } })
+    birthdays.value = data
+    birthdaysLoaded.value = true
+  } catch {
+    // Si falla, simplemente no se muestra la sección; el resto del panel sigue funcionando.
+  }
+}
 
 const greeting = computed(() => {
   const h = new Date().getHours()
@@ -146,6 +229,7 @@ const today = computed(() => {
 })
 
 onMounted(async () => {
+  cargarCumpleanos()
   try {
     const { data } = await api.get('/memberships/stats')
     stats.value = data
@@ -163,6 +247,62 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.bday-card {
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background: var(--qc-bg);
+  border: 1px solid var(--qc-border);
+  backdrop-filter: blur(16px);
+}
+.bday-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--dash-title);
+}
+.bday-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--dash-title) 4%, transparent);
+}
+.bday-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--dash-title);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bday-meta,
+.bday-empty {
+  font-size: 0.75rem;
+  color: var(--dash-sub);
+}
+.bday-days {
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #a78bfa;
+}
+.bday-action {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgb(22 163 74);
+}
+.bday-action:hover {
+  background: rgb(21 128 61);
+}
+
 .marquee {
   overflow: hidden;
   padding: 1rem 0;
