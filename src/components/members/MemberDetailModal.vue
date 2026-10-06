@@ -200,7 +200,9 @@
                           v-if="initialPhotos[i]?.photo"
                           :src="initialPhotos[i].photo"
                           :alt="`Foto inicial ${label}`"
-                          class="progress-photo-img"
+                          class="progress-photo-img cursor-zoom-in"
+                          title="Ver en grande"
+                          @click="zoomPhoto = { src: initialPhotos[i].photo, alt: `${member.name} — ${label}` }"
                         />
                         <div v-else class="progress-photo-empty">
                           <svg class="w-7 h-7 opacity-50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -257,6 +259,8 @@
       </div>
     </div>
   </Transition>
+
+  <PhotoZoomViewer :src="zoomPhoto?.src" :alt="zoomPhoto?.alt" @close="zoomPhoto = null" />
 </template>
 
 <script setup>
@@ -266,6 +270,7 @@ import dayjs from "dayjs";
 import Swal from "sweetalert2";
 import { BaseBadge } from "@/components/ui";
 import MemberWhatsAppStatus from "@/components/members/MemberWhatsAppStatus.vue";
+import PhotoZoomViewer from "@/components/members/PhotoZoomViewer.vue";
 import { formatAppDate } from "@/lib/dates";
 import {
   Activity,
@@ -291,6 +296,7 @@ const emit = defineEmits(["close"]);
 
 const member = ref(null);
 const loading = ref(false);
+const zoomPhoto = ref(null);
 
 watch(
   () => [props.show, props.memberId],
