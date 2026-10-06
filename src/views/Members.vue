@@ -133,7 +133,9 @@
                   v-if="getPrimaryPhoto(member)"
                   :src="getPrimaryPhoto(member)"
                   :alt="`Foto de ${member.name}`"
-                  class="member-avatar"
+                  class="member-avatar cursor-zoom-in"
+                  title="Ver en grande"
+                  @click="zoomPhoto = { src: getPrimaryPhoto(member), alt: member.name }"
                 />
                 <div v-else class="member-avatar member-avatar-fallback">
                   {{ (member.name || "?").charAt(0).toUpperCase() }}
@@ -346,6 +348,8 @@
       @paid="cargarMiembros"
     />
 
+    <PhotoZoomViewer :src="zoomPhoto?.src" :alt="zoomPhoto?.alt" @close="zoomPhoto = null" />
+
     <MemberDetailModal
       :show="showDetailModal"
       :member-id="selectedDetailId"
@@ -392,6 +396,7 @@ import MemberRegisterModal from "@/components/members/MemberRegisterModal.vue";
 import MemberAssignModal from "@/components/members/MemberAssignModal.vue";
 import MemberPaymentModal from "@/components/members/MemberPaymentModal.vue";
 import MemberDetailModal from "@/components/members/MemberDetailModal.vue";
+import PhotoZoomViewer from "@/components/members/PhotoZoomViewer.vue";
 
 // Estado Global
 const members = ref([]);
@@ -409,6 +414,7 @@ const whatsAppOpciones = [
   { value: "off", label: "Sin recordatorios" },
 ];
 const detallesAbiertos = ref([]);
+const zoomPhoto = ref(null);
 
 const frecuenciaOpciones = computed(() => [
   { value: "", label: "Frecuencias" },

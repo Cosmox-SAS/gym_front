@@ -14,7 +14,9 @@
               v-if="photos[i]?.photo"
               :src="photos[i].photo"
               :alt="`Foto ${label}`"
-              class="photo-img"
+              class="photo-img cursor-zoom-in"
+              title="Ver en grande"
+              @click="zoomPhoto = { src: photos[i].photo, alt: `Foto ${label}` }"
             />
             <div v-else class="photo-empty">
               <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
@@ -115,6 +117,7 @@
               v-show="!cameraError"
               ref="videoEl"
               class="cam-video"
+              :class="{ 'cam-video-mirror': facingMode === 'user' }"
               autoplay
               playsinline
               muted
@@ -123,6 +126,16 @@
           <div class="cam-footer">
             <button type="button" class="photo-btn photo-btn-secondary" @click="closeCamera">
               Cancelar
+            </button>
+            <button
+              v-if="hasMultipleCameras"
+              type="button"
+              class="photo-btn photo-btn-secondary"
+              :aria-label="facingMode === 'environment' ? 'Usar cámara frontal' : 'Usar cámara trasera'"
+              @click="switchCamera"
+            >
+              <SwitchCamera class="w-4 h-4" aria-hidden="true" />
+              {{ facingMode === 'environment' ? 'Frontal' : 'Trasera' }}
             </button>
             <button
               type="button"
@@ -140,12 +153,16 @@
         </div>
       </div>
     </Transition>
+
+    <PhotoZoomViewer :src="zoomPhoto?.src" :alt="zoomPhoto?.alt" @close="zoomPhoto = null" />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, nextTick, onBeforeUnmount } from "vue";
 import { formatAppDate } from "@/lib/dates";
+import { SwitchCamera } from "lucide-vue-next";
+import PhotoZoomViewer from "@/components/members/PhotoZoomViewer.vue";
 
 const props = defineProps({
   modelValue: {
@@ -301,6 +318,10 @@ const cameraOpen = ref(false);
 const cameraIndex = ref(null);
 const cameraError = ref("");
 const videoEl = ref(null);
+// Por defecto la cámara trasera del celular; en computadores se usa la que haya.
+const facingMode = ref("environment");
+const hasMultipleCameras = ref(false);
+const zoomPhoto = ref(null);
 let activeStream = null;
 
 async function openCamera(index) {
@@ -315,21 +336,36 @@ async function openCamera(index) {
     return;
   }
 
+  await startStream();
+}
+
+async function startStream() {
+  stopStream();
+  cameraError.value = "";
   try {
     activeStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "user" },
+      // "ideal" para que en equipos con una sola cámara use la que tenga en vez de fallar.
+      video: { facingMode: { ideal: facingMode.value } },
       audio: false,
     });
     if (videoEl.value) {
       videoEl.value.srcObject = activeStream;
       await videoEl.value.play().catch(() => {});
     }
+    // Los nombres de las cámaras solo están disponibles después de dar permiso.
+    const devices = await navigator.mediaDevices.enumerateDevices().catch(() => []);
+    hasMultipleCameras.value = devices.filter((d) => d.kind === "videoinput").length > 1;
   } catch (err) {
     cameraError.value =
       err?.name === "NotAllowedError"
         ? "Permiso de cámara denegado. Habilítalo en el navegador."
         : "No se pudo acceder a la cámara: " + (err?.message || "error desconocido");
   }
+}
+
+async function switchCamera() {
+  facingMode.value = facingMode.value === "environment" ? "user" : "environment";
+  await startStream();
 }
 
 function stopStream() {
@@ -582,6 +618,9 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+/* Solo la cámara frontal se muestra en espejo, como un selfie. */
+.cam-video-mirror {
   transform: scaleX(-1);
 }
 
