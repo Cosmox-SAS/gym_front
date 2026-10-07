@@ -2,7 +2,14 @@ import './assets/main.css'
 import 'animate.css'
 import { registerSW } from 'virtual:pwa-register'
 
-registerSW({ immediate: true })
+const isLocalhost = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname)
+const canUsePwa = window.isSecureContext || isLocalhost
+
+if (canUsePwa) {
+  registerSW({ immediate: true })
+} else if (import.meta.env.PROD) {
+  console.warn('CosmoGym PWA requiere HTTPS para poder instalarse.')
+}
 
 
 import { createApp } from 'vue'

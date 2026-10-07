@@ -37,3 +37,10 @@ npm run build
 ```sh
 npm run lint
 ```
+
+## PWA (CosmoGym instalable)
+
+- La app usa `vite-plugin-pwa` para generar `manifest.webmanifest` y service worker.
+- Se incluyen íconos instalables en `/public/pwa-192x192.png` y `/public/pwa-512x512.png`.
+- El modo de visualización es `standalone` para instalación en móvil y desktop.
+- En producción se valida contexto seguro: sin HTTPS no se registra el service worker y se muestra advertencia en consola.
