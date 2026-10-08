@@ -31,11 +31,11 @@
 
         <div class="mt-8 grid gap-3 sm:grid-cols-2 lg:max-w-xl">
           <div class="rounded-2xl border border-emerald-400/20 bg-[var(--color-surface)] p-4 text-left shadow-card">
-            <p class="text-sm font-bold text-emerald-300">Acceso permitido</p>
+            <p class="text-sm font-bold text-emerald-700 dark:text-emerald-300">Acceso permitido</p>
             <p class="mt-1 text-sm text-subtle">Membresia activa y al dia.</p>
           </div>
           <div class="rounded-2xl border border-amber-400/20 bg-[var(--color-surface)] p-4 text-left shadow-card">
-            <p class="text-sm font-bold text-amber-300">Acceso denegado</p>
+            <p class="text-sm font-bold text-amber-700 dark:text-amber-300">Acceso denegado</p>
             <p class="mt-1 text-sm text-subtle">Membresia vencida o cliente no encontrado.</p>
           </div>
         </div>
@@ -68,7 +68,7 @@
             <p class="mt-3 rounded-2xl px-4 py-3 text-sm font-bold leading-5" :class="memberMessageClass">
               {{ memberResultMessage }}
             </p>
-            <p v-if="state === 'success'" class="mt-2 text-xs font-semibold text-emerald-300">
+            <p v-if="state === 'success'" class="mt-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
               Ingreso registrado: {{ accessTime }}
             </p>
           </div>
@@ -233,8 +233,8 @@ const memberResultMessage = computed(() => {
 });
 
 const memberMessageClass = computed(() => ({
-  "bg-emerald-400/15 text-emerald-200 border border-emerald-400/20": state.value === "success",
-  "bg-amber-400/15 text-amber-200 border border-amber-400/20": state.value === "expired",
+  "bg-emerald-400/15 text-emerald-700 dark:text-emerald-200 border border-emerald-400/20": state.value === "success",
+  "bg-amber-400/15 text-amber-700 dark:text-amber-200 border border-amber-400/20": state.value === "expired",
   "bg-[var(--color-surface-soft)] text-default border border-default-soft": state.value !== "success" && state.value !== "expired",
 }));
 
@@ -265,25 +265,25 @@ const statusIcon = computed(() => {
 });
 
 const statusIconClass = computed(() => ({
-  "bg-cyan-400/15 text-cyan-200": state.value === "idle" || state.value === "submitting",
-  "bg-emerald-400/15 text-emerald-200": state.value === "success",
-  "bg-amber-400/15 text-amber-200": state.value === "expired",
-  "bg-red-400/15 text-red-200": state.value === "not_found" || state.value === "error",
+  "bg-cyan-400/15 text-cyan-700 dark:text-cyan-200": state.value === "idle" || state.value === "submitting",
+  "bg-emerald-400/15 text-emerald-700 dark:text-emerald-200": state.value === "success",
+  "bg-amber-400/15 text-amber-700 dark:text-amber-200": state.value === "expired",
+  "bg-red-400/15 text-red-700 dark:text-red-200": state.value === "not_found" || state.value === "error",
   "animate-pulse": state.value === "submitting",
 }));
 
 const statusLabelClass = computed(() => ({
-  "text-cyan-200": state.value === "idle" || state.value === "submitting",
-  "text-emerald-200": state.value === "success",
-  "text-amber-200": state.value === "expired",
-  "text-red-200": state.value === "not_found" || state.value === "error",
+  "text-cyan-700 dark:text-cyan-200": state.value === "idle" || state.value === "submitting",
+  "text-emerald-700 dark:text-emerald-200": state.value === "success",
+  "text-amber-700 dark:text-amber-200": state.value === "expired",
+  "text-red-700 dark:text-red-200": state.value === "not_found" || state.value === "error",
 }));
 
 const messageClass = computed(() => ({
   "text-subtle": state.value === "idle" || state.value === "submitting",
-  "text-emerald-200": state.value === "success",
-  "text-amber-200": state.value === "expired",
-  "text-red-200": state.value === "not_found" || state.value === "error",
+  "text-emerald-700 dark:text-emerald-200": state.value === "success",
+  "text-amber-700 dark:text-amber-200": state.value === "expired",
+  "text-red-700 dark:text-red-200": state.value === "not_found" || state.value === "error",
 }));
 
 function speak(message: string) {
