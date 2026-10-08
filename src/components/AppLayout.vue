@@ -228,7 +228,7 @@ const confirmLogout = async () => {
   })
   if (result.isConfirmed) {
     auth.logout()
-    router.push('/')
+    router.push('/login')
   }
 }
 </script>

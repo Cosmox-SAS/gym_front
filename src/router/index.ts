@@ -3,8 +3,14 @@ import { createRouter, createWebHistory } from "vue-router";
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    // Página inicial pública: presentación de la plataforma
     {
       path: "/",
+      name: "Landing",
+      component: () => import("@/views/LandingPage.vue"),
+    },
+    {
+      path: "/login",
       name: "Login",
       component: () => import("@/views/Login.vue"),
     },
@@ -161,6 +167,8 @@ router.beforeEach((to, from, next) => {
 
   if (to.meta.requiresAuth && !isAuthenticated) {
     next({ name: "Login" });
+  } else if (to.name === "Login" && isAuthenticated) {
+    next({ name: "Menu" });
   } else {
     next();
   }

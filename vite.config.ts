@@ -20,7 +20,8 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
-        start_url: '/',
+        // La app instalada abre directo en el login (o en el panel si ya hay sesión)
+        start_url: '/login',
         icons: [
           {
             src: 'pwa-192x192.png',
