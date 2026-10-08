@@ -75,7 +75,7 @@
 
       <p class="login-footer-text">
         ¿Ya tienes cuenta?
-        <router-link to="/" class="login-footer-link">Inicia sesión</router-link>
+        <router-link to="/login" class="login-footer-link">Inicia sesión</router-link>
       </p>
 
     </div>
